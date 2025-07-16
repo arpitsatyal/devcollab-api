@@ -21,7 +21,14 @@ model User {
   tasksAssigned      Task[]              @relation("AssignedToRelation")
   tasksCreated       Task[]              @relation("TaskAuthorRelation")
   UserPinnedProject  UserPinnedProject[]
+  provider Provider
   chats     Chat[]   @relation("Sender")
+}
+
+enum Provider {
+  GOOGLE
+  GITHUB
+  LOCAL
 }
 
 model Project {
