@@ -1,6 +1,12 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Req,
+  Res,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { Request } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -10,7 +16,25 @@ export class AuthController {
 
   @Get('google/redirect')
   @UseGuards(AuthGuard('google'))
-  googleRedirect(@Req() req: Request) {
-    return req.user;
+  googleRedirect(@Req() req, @Res() res) {
+    if (!req.user) {
+      throw new UnauthorizedException();
+    }
+    req.session.userId = req.user.id;
+    res.render('dashboard', { user: req.user });
+  }
+
+  @Get('github')
+  @UseGuards(AuthGuard('github'))
+  async githubLogin() {}
+
+  @Get('callback/github')
+  @UseGuards(AuthGuard('github'))
+  githubCallback(@Req() req) {
+    if (!req.user) {
+      throw new UnauthorizedException();
+    }
+
+    return { message: 'Login successful', user: req.user };
   }
 }

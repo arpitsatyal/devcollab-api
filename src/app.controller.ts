@@ -7,4 +7,10 @@ export class AppController {
   showLoginPage() {
     return {};
   }
+
+  @Get('dashboard')
+  @Render('dashboard')
+  showDashboardPage() {
+    return {};
+  }
 }
