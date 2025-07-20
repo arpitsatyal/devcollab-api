@@ -18,11 +18,11 @@ model User {
   projects           Project[]           @relation("ProjectOwner")
   snippets           Snippet[]           @relation("AuthorRelation")
   lastEditedSnippets Snippet[]           @relation("LastEditorRelation")
-  tasksAssigned      Task[]              @relation("AssignedToRelation")
-  tasksCreated       Task[]              @relation("TaskAuthorRelation")
+  workItemAssigned   WorkItem[]          @relation("AssignedToRelation")
+  workItemCreated    WorkItem[]          @relation("WorkItemAuthorRelation")
   UserPinnedProject  UserPinnedProject[]
-  provider Provider
-  chats     Chat[]   @relation("Sender")
+  provider           Provider
+  chats              Chat[]              @relation("Sender")
 }
 
 enum Provider {
@@ -41,7 +41,7 @@ model Project {
   ownerId     String
   owner       User                @relation("ProjectOwner", fields: [ownerId], references: [id])
   snippets    Snippet[]
-  tasks       Task[]
+  workItems   WorkItem[]
   pinnedBy    UserPinnedProject[]
   docs        Doc[]
 }
@@ -72,23 +72,23 @@ model Snippet {
   project        Project  @relation(fields: [projectId], references: [id])
 }
 
-model Task {
-  id           String     @id @default(cuid())
+model WorkItem {
+  id           String         @id @default(cuid())
   title        String
   description  String?
-  status       TaskStatus @default(TODO)
+  status       WorkItemStatus @default(TODO)
   assignedToId String?
   authorId     String?
   dueDate      DateTime?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
   projectId    String
-  assignedTo   User?      @relation("AssignedToRelation", fields: [assignedToId], references: [id])
-  author       User?      @relation("TaskAuthorRelation", fields: [authorId], references: [id])
-  project      Project    @relation(fields: [projectId], references: [id])
+  assignedTo   User?          @relation("AssignedToRelation", fields: [assignedToId], references: [id])
+  author       User?          @relation("WorkItemAuthorRelation", fields: [authorId], references: [id])
+  project      Project        @relation(fields: [projectId], references: [id])
 }
 
-enum TaskStatus {
+enum WorkItemStatus {
   TODO
   IN_PROGRESS
   DONE
@@ -99,8 +99,8 @@ model Doc {
   label     String
   projectId String
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  roomId  String   @unique
-  content   Json?    @default("{}") 
+  roomId    String   @unique
+  content   Json?    @default("{}")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -109,10 +109,10 @@ model Chat {
   id        String    @id @default(uuid())
   sender    User?     @relation("Sender", fields: [senderId], references: [id])
   senderId  String?
-  title     String?   
+  title     String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  messages  Message[] @relation("ChatMessages") 
+  messages  Message[] @relation("ChatMessages")
 }
 
 model Message {
@@ -120,6 +120,6 @@ model Message {
   chatId    String
   chat      Chat     @relation("ChatMessages", fields: [chatId], references: [id], onDelete: Cascade)
   content   String
-  isUser    Boolean 
+  isUser    Boolean
   createdAt DateTime @default(now())
 }

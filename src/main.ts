@@ -1,13 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { AllExceptionsFilter } from './Filters/GlobalExceptionFilter';
+import { AllExceptionsFilter } from './common/filters/global-exception-filter';
 import * as session from 'express-session';
 import * as passport from 'passport';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import * as cookieParser from 'cookie-parser';
-import { AuthMiddleware } from './auth/auth.middleware';
 import { ValidationPipe } from '@nestjs/common';
+import { AuthMiddleware } from './modules/auth/auth.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -24,7 +24,6 @@ async function bootstrap() {
   );
 
   app.use(passport.initialize());
-  app.use(passport.session());
 
   const authMiddleware = app.get(AuthMiddleware);
   app.use(authMiddleware.use.bind(authMiddleware)); // Apply globally
