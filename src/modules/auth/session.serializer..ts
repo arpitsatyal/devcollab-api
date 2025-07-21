@@ -1,4 +1,3 @@
-// session.serializer.ts
 import { Injectable } from '@nestjs/common';
 import { PassportSerializer } from '@nestjs/passport';
 import { User } from '@prisma/client';
@@ -22,7 +21,6 @@ export class SessionSerializer extends PassportSerializer {
       const user = await this.userService.findById(id);
       done(null, user);
     } catch (error) {
-      console.error('Deserialize error:', error);
       done(error, null);
     }
   }

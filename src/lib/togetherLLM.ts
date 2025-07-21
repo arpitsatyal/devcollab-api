@@ -56,10 +56,6 @@ export class TogetherLLM extends SimpleChatModel {
 
       return output;
     } catch (error: any) {
-      console.error(
-        'TogetherLLM error:',
-        error?.response?.data || error?.message || error,
-      );
       throw new Error('Failed to generate a response from TogetherLLM.');
     }
   }

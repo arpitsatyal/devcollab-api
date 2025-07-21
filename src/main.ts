@@ -5,28 +5,32 @@ import * as session from 'express-session';
 import * as passport from 'passport';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
-import * as cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
-import { AuthMiddleware } from './modules/auth/auth.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.use(cookieParser());
-
   app.use(
     session({
-      secret: process.env.SESSION_SECRET || 'secretKey',
+      secret: process.env.SESSION_SECRET || 'your-session-secret',
       resave: false,
       saveUninitialized: false,
-      cookie: { maxAge: 3600000, httpOnly: true, secure: false },
+      cookie: {
+        secure: false, // Set to true in production with HTTPS
+        httpOnly: true,
+        sameSite: 'lax', // Ensure compatibility with redirects
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      },
     }),
   );
 
   app.use(passport.initialize());
+  app.use(passport.session({ pauseStream: true }));
 
-  const authMiddleware = app.get(AuthMiddleware);
-  app.use(authMiddleware.use.bind(authMiddleware)); // Apply globally
+  app.enableCors({
+    origin: true,
+    credentials: true,
+  });
 
   app.useGlobalPipes(new ValidationPipe());
 

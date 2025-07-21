@@ -7,6 +7,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { CurrentUser } from '../users/user.decorator';
+import { User } from '@prisma/client';
+import { SessionAuthGuard } from 'src/common/guards/auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -16,12 +19,22 @@ export class AuthController {
 
   @Get('google/redirect')
   @UseGuards(AuthGuard('google'))
-  googleRedirect(@Req() req, @Res() res) {
+  async googleAuthRedirect(@Req() req, @Res() res) {
     if (!req.user) {
       throw new UnauthorizedException();
     }
-    req.session.userId = req.user.id;
-    return { message: 'Login successful', user: req.user };
+
+    req.logIn(req.user, (err) => {
+      if (err) {
+        throw new UnauthorizedException('Failed to log in');
+      }
+      req.session.save((err) => {
+        if (err) {
+          throw new UnauthorizedException('Failed to save session');
+        }
+        res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
+      });
+    });
   }
 
   @Get('github')
@@ -30,12 +43,27 @@ export class AuthController {
 
   @Get('callback/github')
   @UseGuards(AuthGuard('github'))
-  githubCallback(@Req() req) {
+  githubCallback(@Req() req, @Res() res) {
     if (!req.user) {
       throw new UnauthorizedException();
     }
 
-    req.session.userId = req.user.id;
-    return { message: 'Login successful', user: req.user };
+    req.logIn(req.user, (err) => {
+      if (err) {
+        throw new UnauthorizedException('Failed to log in');
+      }
+      req.session.save((err) => {
+        if (err) {
+          throw new UnauthorizedException('Failed to save session');
+        }
+        res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
+      });
+    });
+  }
+
+  @Get('me')
+  @UseGuards(SessionAuthGuard)
+  async getProfile(@CurrentUser() user: User) {
+    return user;
   }
 }
