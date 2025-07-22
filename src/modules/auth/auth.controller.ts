@@ -10,6 +10,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser } from '../users/user.decorator';
 import { User } from '@prisma/client';
 import { SessionAuthGuard } from 'src/common/guards/auth.guard';
+import { AuthenticatedRequest } from 'src/common/interfaces/AuthenticatedRequest';
+import { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -65,5 +67,48 @@ export class AuthController {
   @UseGuards(SessionAuthGuard)
   async getProfile(@CurrentUser() user: User) {
     return user;
+  }
+
+  @Get('logout')
+  async logout(@Req() req: AuthenticatedRequest, @Res() res: Response) {
+    try {
+      // Promisify the logout function
+      await new Promise<void>((resolve, reject) => {
+        req.logout((err) => {
+          if (err) {
+            reject(new UnauthorizedException('Failed to logout'));
+          } else {
+            resolve();
+          }
+        });
+      });
+
+      // Promisify the session destroy function
+      await new Promise<void>((resolve, reject) => {
+        req.session.destroy((error) => {
+          if (error) {
+            reject(new UnauthorizedException('Failed to destroy session'));
+          } else {
+            resolve();
+          }
+        });
+      });
+
+      // Clear the session cookie
+      res.clearCookie('connect.sid', {
+        path: '/',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+      });
+
+      // Send success response
+      return res.status(200).json({
+        success: true,
+        message: 'Logout successful',
+      });
+    } catch (error) {
+      throw error;
+    }
   }
 }
