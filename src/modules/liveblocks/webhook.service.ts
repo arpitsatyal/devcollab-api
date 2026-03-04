@@ -91,7 +91,7 @@ export class WebhookService {
       }),
       this.prisma.doc.findFirst({
         where: { roomId: mention.roomId },
-        select: { label: true, projectId: true, id: true },
+        select: { label: true, workspaceId: true, id: true },
       }),
     ]);
 
@@ -99,7 +99,7 @@ export class WebhookService {
       await this.queueService.sendMessage({
         assigneeEmail: user.email,
         content: mention.content,
-        mentionUrl: `https://www.devcollab.store/projects/${docs?.projectId}/docs?docId=${docs?.id}`,
+        mentionUrl: `https://www.devcollab.store/workspaces/${docs?.workspaceId}/docs?docId=${docs?.id}`,
         label: docs?.label,
         authorName: author?.name,
       });

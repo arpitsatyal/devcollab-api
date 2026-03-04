@@ -2,14 +2,14 @@ import { Controller, Get, Post, Patch, Body, Param } from '@nestjs/common';
 import { DocsService } from './docs.service';
 import { DocCreateDto, DocUpdateDto } from './docs.dto';
 
-@Controller('projects/:projectId/docs')
+@Controller('workspaces/:workspaceId/docs')
 // @UseGuards(SessionAuthGuard)
 export class DocsController {
   constructor(private docsService: DocsService) {}
 
   @Get()
-  getDocs(@Param('projectId') projectId: string) {
-    return this.docsService.getDocs(projectId);
+  getDocs(@Param('workspaceId') workspaceId: string) {
+    return this.docsService.getDocs(workspaceId);
   }
 
   @Get(':docId')
@@ -18,8 +18,8 @@ export class DocsController {
   }
 
   @Post()
-  createDoc(@Param('projectId') projectId: string, @Body() dto: DocCreateDto) {
-    return this.docsService.createDoc(projectId, dto);
+  createDoc(@Param('workspaceId') workspaceId: string, @Body() dto: DocCreateDto) {
+    return this.docsService.createDoc(workspaceId, dto);
   }
 
   @Patch(':docId')

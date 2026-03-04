@@ -1,18 +1,36 @@
 import { Module } from '@nestjs/common';
-import { AiService } from './ai.service';
-import { AiController } from './ai.controller';
+import { AiService } from './services/ai.service';
+import { AiController } from './controllers/ai.controller';
 import { PrismaService } from 'src/common/services/prisma.service';
-import { MessageService } from 'src/modules/message/message.service';
-import { LlmService } from './LLMService';
-import { VectorStoreService } from './VectorStoreService';
+import { ChatEngineService } from './engine/services/chatEngine.service';
+import { SuggestionService } from './engine/services/suggestionService';
+import { GenerationService } from './engine/services/generationService';
+import { PromptService } from './engine/services/promptService';
+import { RetrievalService } from './engine/services/retrievalService';
+import { ToolService } from './engine/services/toolService';
+import { LlmFactoryService } from './engine/llms/llmFactory';
+import { TogetherLlmService } from './engine/llms/togetherLLM';
+import { GroqLlmService } from './engine/llms/groqLLM';
+import { VectorStoreService } from './engine/pinecone/vectorStore';
+import { ChatEngineConfig } from './engine/contracts/ports';
+import { PrismaMessageStore } from './engine/adapters/prismaMessageStore';
 
 @Module({
   providers: [
     AiService,
-    PrismaService,
-    MessageService,
-    LlmService,
+    ChatEngineService,
+    SuggestionService,
+    GenerationService,
+    PromptService,
+    RetrievalService,
+    ToolService,
+    LlmFactoryService,
+    TogetherLlmService,
+    GroqLlmService,
     VectorStoreService,
+    ChatEngineConfig,
+    PrismaMessageStore,
+    PrismaService,
   ],
   controllers: [AiController],
 })

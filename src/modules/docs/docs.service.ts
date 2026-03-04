@@ -3,10 +3,14 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/common/services/prisma.service';
 import { v4 as uuidv4 } from 'uuid';
 import { DocCreateDto, DocUpdateDto } from './docs.dto';
+import { QstashService } from 'src/common/qstash/qstash.service';
 
 @Injectable()
 export class DocsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private qstashService: QstashService,
+  ) {}
 
   async getDoc(docId: string) {
     const doc = await this.prisma.doc.findUnique({
@@ -18,20 +22,23 @@ export class DocsService {
     return doc;
   }
 
-  async getDocs(projectId: string) {
+  async getDocs(workspaceId: string) {
     return this.prisma.doc.findMany({
-      where: { projectId },
+      where: { workspaceId },
     });
   }
 
-  async createDoc(projectId: string, dto: DocCreateDto) {
-    return this.prisma.doc.create({
+  async createDoc(workspaceId: string, dto: DocCreateDto) {
+    const doc = await this.prisma.doc.create({
       data: {
         label: dto.label,
-        projectId,
+        workspaceId,
         roomId: `docs_${uuidv4()}`,
       },
     });
+
+    await this.qstashService.publishSyncEvent('doc', doc);
+    return doc;
   }
 
   async updateDoc(docId: string, dto: DocUpdateDto) {
@@ -41,10 +48,13 @@ export class DocsService {
     };
 
     try {
-      return await this.prisma.doc.update({
+      const updated = await this.prisma.doc.update({
         where: { id: docId },
         data: updateData,
       });
+
+      await this.qstashService.publishSyncEvent('doc', updated);
+      return updated;
     } catch (error) {
       if (error.code === 'P2025') {
         throw new NotFoundException('Doc not found');

@@ -2,10 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/common/services/prisma.service';
 import { SnippetsCreateDto, SnippetsUpdateDto } from './snippets.dto';
 import { Prisma } from '@prisma/client';
+import { QstashService } from 'src/common/qstash/qstash.service';
 
 @Injectable()
 export class SnippetsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private qstashService: QstashService,
+  ) {}
 
   async getSnippet(snippetId: string) {
     const snippet = await this.prisma.snippet.findUnique({
@@ -16,27 +20,30 @@ export class SnippetsService {
     return snippet;
   }
 
-  async getSnippets(projectId: string) {
+  async getSnippets(workspaceId: string) {
     return this.prisma.snippet.findMany({
-      where: { projectId },
+      where: { workspaceId },
     });
   }
 
   async createSnippet(
-    projectId: string,
+    workspaceId: string,
     authorId: string,
     dto: SnippetsCreateDto,
   ) {
-    return this.prisma.snippet.create({
+    const snippet = await this.prisma.snippet.create({
       data: {
         title: dto.title,
         language: dto.language,
         content: dto.content,
         extension: dto.extension,
         authorId,
-        projectId,
+        workspaceId,
       },
     });
+
+    await this.qstashService.publishSyncEvent('snippet', snippet);
+    return snippet;
   }
 
   async updateSnippet(snippetId: string, dto: SnippetsUpdateDto) {
@@ -52,9 +59,12 @@ export class SnippetsService {
       }),
     };
 
-    return this.prisma.snippet.update({
+    const updated = await this.prisma.snippet.update({
       where: { id: snippetId },
       data: updateData,
     });
+
+    await this.qstashService.publishSyncEvent('snippet', updated);
+    return updated;
   }
 }

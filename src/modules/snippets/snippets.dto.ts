@@ -14,7 +14,7 @@ export class SnippetsCreateDto {
   authorId: string;
 
   @IsString()
-  projectId: string;
+  workspaceId: string;
 
   @IsOptional()
   @IsString()

@@ -25,6 +25,9 @@
     "@huggingface/inference": "^4.5.3",
     "@langchain/community": "^0.3.49",
     "@langchain/core": "^0.3.66",
+    "@langchain/openai": "^0.3.12",
+    "@langchain/pinecone": "^1.0.1",
+    "@pinecone-database/pinecone": "^7.0.0",
     "@liveblocks/emails": "^3.1.4",
     "@liveblocks/node": "^3.1.4",
     "@nestjs/common": "^11.0.1",
@@ -32,6 +35,8 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
     "@prisma/client": "^6.11.1",
+    "@octokit/rest": "^21.1.1",
+    "@upstash/qstash": "^2.9.0",
     "axios": "^1.10.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
@@ -45,7 +50,8 @@
     "passport-google-oauth20": "^2.0.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

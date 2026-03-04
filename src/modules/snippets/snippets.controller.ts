@@ -5,32 +5,32 @@ import { SnippetsCreateDto, SnippetsUpdateDto } from './snippets.dto';
 import { CurrentUser } from 'src/modules/users/user.decorator';
 import { User } from '@prisma/client';
 
-@Controller('projects/:projectId/snippets')
+@Controller('workspaces/:workspaceId/snippets')
 // @UseGuards(AuthGuard)
 export class SnippetsController {
   constructor(private snippetsService: SnippetsService) {}
 
   @Get()
   async getSnippets(
-    @Param('projectId') projectId: string,
+    @Param('workspaceId') workspaceId: string,
     @Req() req: Request,
   ) {
-    return this.snippetsService.getSnippets(projectId);
+    return this.snippetsService.getSnippets(workspaceId);
   }
 
   @Get(':snippetId')
   async getSnippet(@Param('snippetId') snippetId: string) {
-    return this.snippetsService.getSnippets(snippetId);
+    return this.snippetsService.getSnippet(snippetId);
   }
 
   @Post()
   async createSnippet(
-    @Param('projectId') projectId: string,
+    @Param('workspaceId') workspaceId: string,
     @Body() dto: SnippetsCreateDto,
     @CurrentUser() user: User,
   ) {
     const userId = user.id;
-    return this.snippetsService.createSnippet(projectId, userId, dto);
+    return this.snippetsService.createSnippet(workspaceId, userId, dto);
   }
 
   @Patch(':snippetId')

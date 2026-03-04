@@ -1,34 +1,52 @@
-import { Controller, Get, Post, Patch, Body, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Query,
+  Param,
+  Body,
+} from '@nestjs/common';
 import { WorkItemsService } from './work-items.service';
-import { WorkItemCreateDto, WorkItemUpdateStatusDto } from './workItems.dto';
+import { WorkItemCreateDto, WorkItemUpdateStatusDto } from './work-items.dto';
 import { CurrentUser } from 'src/modules/users/user.decorator';
 import { User } from '@prisma/client';
 
-@Controller('projects/:projectId/work-items')
-// @UseGuards(AuthGuard)
+@Controller('work-items')
+// @UseGuards(SessionAuthGuard)
 export class WorkItemsController {
-  constructor(private workItemService: WorkItemsService) {}
+  constructor(private readonly workItemsService: WorkItemsService) {}
 
   @Get()
-  getWorkItems(@Param('projectId') projectId: string) {
-    return this.workItemService.getWorkItems(projectId);
+  getWorkItems(@Query('workspaceId') workspaceId: string) {
+    return this.workItemsService.getWorkItems(workspaceId);
+  }
+
+  @Get('due')
+  getDueSoon(@Query('days') days?: string) {
+    const threshold = days ? parseInt(days, 10) : 1;
+    return this.workItemsService.getDueSoon(threshold);
+  }
+
+  @Get(':workItemId')
+  getWorkItem(@Param('workItemId') workItemId: string) {
+    return this.workItemsService.getWorkItem(workItemId);
   }
 
   @Post()
   createWorkItem(
-    @Param('projectId') projectId: string,
-    @Body() dto: WorkItemCreateDto,
+    @Body() body: WorkItemCreateDto,
     @CurrentUser() user: User,
   ) {
-    const userId = user.id;
-    return this.workItemService.createWorkItem(projectId, userId, dto);
+    const authorId = user.id;
+    return this.workItemsService.createWorkItem(authorId, body);
   }
 
   @Patch(':workItemId/status')
-  updateWorkItemStatus(
+  updateStatus(
     @Param('workItemId') workItemId: string,
-    @Body() dto: WorkItemUpdateStatusDto,
+    @Body() body: WorkItemUpdateStatusDto,
   ) {
-    return this.workItemService.updateWorkItemStatus(workItemId, dto);
+    return this.workItemsService.updateStatus(workItemId, body);
   }
 }

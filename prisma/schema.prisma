@@ -15,12 +15,12 @@ model User {
   image              String?
   createdAt          DateTime            @default(now())
   emailVerified      DateTime?
-  projects           Project[]           @relation("ProjectOwner")
+  workspaces         Workspace[]         @relation("WorkspaceOwner")
   snippets           Snippet[]           @relation("AuthorRelation")
   lastEditedSnippets Snippet[]           @relation("LastEditorRelation")
-  workItemAssigned   WorkItem[]          @relation("AssignedToRelation")
-  workItemCreated    WorkItem[]          @relation("WorkItemAuthorRelation")
-  UserPinnedProject  UserPinnedProject[]
+  workItemsAssigned  WorkItem[]          @relation("AssignedToRelation")
+  workItemsCreated   WorkItem[]          @relation("WorkItemAuthorRelation")
+  UserPinnedWorkspace  UserPinnedWorkspace[]
   provider           Provider
   chats              Chat[]              @relation("Sender")
 }
@@ -31,7 +31,7 @@ enum Provider {
   LOCAL
 }
 
-model Project {
+model Workspace {
   id          String              @id @default(cuid())
   title       String
   description String?
@@ -39,21 +39,21 @@ model Project {
   updatedAt   DateTime            @updatedAt
   isPublic    Boolean             @default(false)
   ownerId     String
-  owner       User                @relation("ProjectOwner", fields: [ownerId], references: [id])
+  owner       User                @relation("WorkspaceOwner", fields: [ownerId], references: [id])
   snippets    Snippet[]
   workItems   WorkItem[]
-  pinnedBy    UserPinnedProject[]
+  pinnedBy    UserPinnedWorkspace[]
   docs        Doc[]
 }
 
-model UserPinnedProject {
+model UserPinnedWorkspace {
   id        String  @id @default(cuid())
   userId    String
-  projectId String
-  project   Project @relation(fields: [projectId], references: [id])
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
   user      User    @relation(fields: [userId], references: [id])
 
-  @@unique([userId, projectId])
+  @@unique([userId, workspaceId])
 }
 
 model Snippet {
@@ -63,29 +63,32 @@ model Snippet {
   content        String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-  projectId      String
+  workspaceId    String
   authorId       String?
   lastEditedById String?
   extension      String?
   author         User?    @relation("AuthorRelation", fields: [authorId], references: [id])
   lastEditedBy   User?    @relation("LastEditorRelation", fields: [lastEditedById], references: [id])
-  project        Project  @relation(fields: [projectId], references: [id])
+  workspace      Workspace  @relation(fields: [workspaceId], references: [id])
+  workItems          WorkItem[]
 }
 
 model WorkItem {
-  id           String         @id @default(cuid())
+  id           String     @id @default(cuid())
   title        String
   description  String?
   status       WorkItemStatus @default(TODO)
   assignedToId String?
   authorId     String?
   dueDate      DateTime?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  projectId    String
-  assignedTo   User?          @relation("AssignedToRelation", fields: [assignedToId], references: [id])
-  author       User?          @relation("WorkItemAuthorRelation", fields: [authorId], references: [id])
-  project      Project        @relation(fields: [projectId], references: [id])
+  aiPlan       String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  workspaceId    String
+  assignedTo   User?      @relation("AssignedToRelation", fields: [assignedToId], references: [id])
+  author       User?      @relation("WorkItemAuthorRelation", fields: [authorId], references: [id])
+  workspace      Workspace    @relation(fields: [workspaceId], references: [id])
+  snippets     Snippet[]
 }
 
 enum WorkItemStatus {
@@ -97,8 +100,8 @@ enum WorkItemStatus {
 model Doc {
   id        String   @id @default(uuid())
   label     String
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  workspaceId String
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   roomId    String   @unique
   content   Json?    @default("{}")
   createdAt DateTime @default(now())
