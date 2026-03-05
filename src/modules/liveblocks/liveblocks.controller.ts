@@ -3,14 +3,10 @@ import { LiveblocksService } from './liveblocks.service';
 import { Response } from 'express';
 import { CurrentUser } from 'src/modules/users/user.decorator';
 import { LiveblocksUserDto } from './liveblocksUser.dto';
-import { WebhookService } from './webhook.service';
 
 @Controller('liveblocks')
 export class LiveblocksController {
-  constructor(
-    private readonly liveblocksService: LiveblocksService,
-    private readonly webhookService: WebhookService,
-  ) {}
+  constructor(private readonly liveblocksService: LiveblocksService) {}
 
   // @UseGuards(SessionAuthGuard)
   @Post('auth')
@@ -25,10 +21,5 @@ export class LiveblocksController {
     );
 
     return res.status(status).json(body);
-  }
-
-  @Post('webhook')
-  async webhook(@Body() payload: any) {
-    return this.webhookService.handleWebhook(payload);
   }
 }

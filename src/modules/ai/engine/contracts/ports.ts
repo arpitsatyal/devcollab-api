@@ -6,7 +6,11 @@ export interface LlmGateway {
 }
 
 export interface PromptPort {
-  constructPrompt(context: string, history: string, question: string): Promise<string> | string;
+  constructPrompt(
+    context: string,
+    history: string,
+    question: string,
+  ): Promise<string> | string;
   buildChatMessages(history: string, question: string): any[];
   buildIntentClassificationPrompt(question: string): any[];
   buildConversationalMessages(history: string, question: string): any[];
@@ -31,7 +35,10 @@ export interface GenerationPort {
 }
 
 export interface ToolRegistry {
-  getTools(): { list: any[]; byName: Record<string, { invoke: (args: any) => Promise<any> }> };
+  getTools(): {
+    list: any[];
+    byName: Record<string, { invoke: (args: any) => Promise<any> }>;
+  };
 }
 
 export interface MessageHistoryPort {

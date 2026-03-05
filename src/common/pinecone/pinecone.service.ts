@@ -14,7 +14,11 @@ export class PineconeService {
   private readonly indexName = process.env.PINECONE_INDEX!;
   private readonly embeddings = new PineconeInferenceEmbeddings();
 
-  async syncToVectorStore(type: SyncType, id: string, action: 'upsert' | 'delete') {
+  async syncToVectorStore(
+    type: SyncType,
+    id: string,
+    action: 'upsert' | 'delete',
+  ) {
     const index = this.client.index({ name: this.indexName });
 
     if (action === 'delete') {
@@ -22,7 +26,10 @@ export class PineconeService {
         await (index as any).deleteOne({ id });
         this.logger.log(`[VectorSync] Deleted ${type}: ${id}`);
       } catch (e: any) {
-        this.logger.error(`[VectorSync] Failed to delete ${type}: ${id}`, e?.message || e);
+        this.logger.error(
+          `[VectorSync] Failed to delete ${type}: ${id}`,
+          e?.message || e,
+        );
       }
       return;
     }
@@ -58,7 +65,9 @@ export class PineconeService {
     }
 
     if (!data) {
-      this.logger.warn(`[VectorSync] ${type} not found in DB: ${id}. Skipping upsert.`);
+      this.logger.warn(
+        `[VectorSync] ${type} not found in DB: ${id}. Skipping upsert.`,
+      );
       return;
     }
 
@@ -109,7 +118,10 @@ export class PineconeService {
         `[VectorSync] Upserted ${type}: ${data.id} (${data.title || data.label})`,
       );
     } catch (e: any) {
-      this.logger.error(`[VectorSync] Failed to sync ${type}: ${data.id}`, e?.message || e);
+      this.logger.error(
+        `[VectorSync] Failed to sync ${type}: ${data.id}`,
+        e?.message || e,
+      );
     }
   }
 }

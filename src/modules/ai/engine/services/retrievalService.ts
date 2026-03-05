@@ -14,7 +14,10 @@ export class RetrievalService implements RetrievalPort {
     private readonly vectorStoreService: VectorStoreService,
   ) {}
 
-  async generateQueryVariations(query: string, llm: BaseChatModel): Promise<string[]> {
+  async generateQueryVariations(
+    query: string,
+    llm: BaseChatModel,
+  ): Promise<string[]> {
     const prompt = `You are an AI assistant helping to expand a user's search query.
     Generate 3 alternative versions of the following query to improve search retrieval. 
     Focus on synonyms, related concepts, and technical terms relevant to software development.
@@ -53,7 +56,11 @@ export class RetrievalService implements RetrievalPort {
         results.push(
           ...workspaces.map((w) => ({
             pageContent: `Workspace Title: ${w.title}\nDescription: ${w.description || 'No description'}`,
-            metadata: { type: 'workspace', workspaceId: w.id, workspaceTitle: w.title },
+            metadata: {
+              type: 'workspace',
+              workspaceId: w.id,
+              workspaceTitle: w.title,
+            },
           })),
         );
       }
@@ -114,7 +121,9 @@ export class RetrievalService implements RetrievalPort {
         results.push(
           ...docs.map((d) => {
             const contentStr =
-              typeof d.content === 'string' ? d.content : JSON.stringify(d.content || {});
+              typeof d.content === 'string'
+                ? d.content
+                : JSON.stringify(d.content || {});
             return {
               pageContent: `Doc Label: ${d.label}\nContent:\n${contentStr}`,
               metadata: {
@@ -132,7 +141,11 @@ export class RetrievalService implements RetrievalPort {
     return results;
   }
 
-  async performHybridSearch(queries: string[], originalQuery: string, filters?: Record<string, any>) {
+  async performHybridSearch(
+    queries: string[],
+    originalQuery: string,
+    filters?: Record<string, any>,
+  ) {
     const vectorStore = await this.vectorStoreService.getVectorStore();
 
     const vectorSearchPromises = queries.map((q) =>

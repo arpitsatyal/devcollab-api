@@ -9,10 +9,16 @@ export class GenerationService implements GenerationPort {
   improveResponseWithCitations(answer: string, filteredResults: any[]) {
     if (filteredResults.length > 0 && !answer.includes('Source:')) {
       const sources = [
-        ...new Set(filteredResults.map(([doc]: any) => doc.metadata?.type || 'Documentation')),
+        ...new Set(
+          filteredResults.map(
+            ([doc]: any) => doc.metadata?.type || 'Documentation',
+          ),
+        ),
       ];
 
-      const containsInfo = !answer.toLowerCase().includes("i don't have information");
+      const containsInfo = !answer
+        .toLowerCase()
+        .includes("i don't have information");
       if (containsInfo) {
         answer += `\n\n_Sources: ${sources.join(', ')}_`;
       }

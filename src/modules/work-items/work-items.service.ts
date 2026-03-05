@@ -1,18 +1,24 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from 'src/common/services/prisma.service';
 import { QueueService } from 'src/modules/queue/queue.service';
-import { WorkItemCreateDto, WorkItemUpdateStatusDto } from './work-items.dto';
-import { WorkItemStatus } from '@prisma/client';
+import {
+  WorkItemCreateDto,
+  WorkItemUpdateStatusDto,
+} from './dto/work-items.dto';
+import { Prisma, WorkItem, WorkItemStatus } from '@prisma/client';
 import dayjs from 'dayjs';
 import { QstashService } from 'src/common/qstash/qstash.service';
+import { PrismaCrudService } from 'src/common/services/prisma-crud.service';
 
 @Injectable()
-export class WorkItemsService {
+export class WorkItemsService extends PrismaCrudService<WorkItem> {
   constructor(
     private readonly prisma: PrismaService,
     private readonly queueService: QueueService,
     private readonly qstashService: QstashService,
-  ) {}
+  ) {
+    super(prisma.workItem);
+  }
 
   async getWorkItems(workspaceId: string) {
     if (!workspaceId) {
@@ -25,9 +31,11 @@ export class WorkItemsService {
   }
 
   async getWorkItem(workItemId: string) {
-    const workItem = await this.prisma.workItem.findUnique({ where: { id: workItemId } });
-    if (!workItem) throw new NotFoundException('Work item not found');
-    return workItem;
+    return this.findByIdOrThrow(workItemId, 'Work item');
+  }
+
+  override async update(id: string, data: Prisma.WorkItemUpdateInput) {
+    return super.update(id, data);
   }
 
   async createWorkItem(authorId: string, dto: WorkItemCreateDto) {

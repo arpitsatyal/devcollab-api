@@ -1,27 +1,26 @@
 import {
-  Injectable,
-  Logger,
   BadRequestException,
+  Injectable,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import axios from 'axios';
-import { PrismaService } from 'src/common/services/prisma.service';
-import { QueueService } from 'src/modules/queue/queue.service';
 import { Liveblocks } from '@liveblocks/node';
 import { prepareTextMentionNotificationEmailAsReact } from '@liveblocks/emails';
+import { PrismaService } from 'src/common/services/prisma.service';
+import { QueueService } from 'src/modules/queue/queue.service';
 
 @Injectable()
-export class WebhookService {
-  private readonly logger = new Logger(WebhookService.name);
+export class LiveblocksWebhookService {
+  private readonly logger = new Logger(LiveblocksWebhookService.name);
+  private readonly liveblocks = new Liveblocks({
+    secret: process.env.LIVEBLOCKS_SECRET_KEY!,
+  });
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly queueService: QueueService,
   ) {}
-
-  private liveblocks = new Liveblocks({
-    secret: process.env.LIVEBLOCKS_SECRET_KEY!,
-  });
 
   async handleWebhook(payload: any): Promise<{ message: string }> {
     const { type, data } = payload || {};

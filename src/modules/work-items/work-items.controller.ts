@@ -8,7 +8,10 @@ import {
   Body,
 } from '@nestjs/common';
 import { WorkItemsService } from './work-items.service';
-import { WorkItemCreateDto, WorkItemUpdateStatusDto } from './work-items.dto';
+import {
+  WorkItemCreateDto,
+  WorkItemUpdateStatusDto,
+} from './dto/work-items.dto';
 import { CurrentUser } from 'src/modules/users/user.decorator';
 import { User } from '@prisma/client';
 
@@ -34,10 +37,7 @@ export class WorkItemsController {
   }
 
   @Post()
-  createWorkItem(
-    @Body() body: WorkItemCreateDto,
-    @CurrentUser() user: User,
-  ) {
+  createWorkItem(@Body() body: WorkItemCreateDto, @CurrentUser() user: User) {
     const authorId = user.id;
     return this.workItemsService.createWorkItem(authorId, body);
   }

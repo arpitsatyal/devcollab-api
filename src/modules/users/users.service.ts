@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 import { PrismaService } from 'src/common/services/prisma.service';
+import { PrismaCrudService } from 'src/common/services/prisma-crud.service';
+import { UserRepository } from './repositories/user.repository';
 
 interface CreateUserDTO {
   email: string;
@@ -10,44 +12,47 @@ interface CreateUserDTO {
 }
 
 @Injectable()
-export class UsersService {
-  constructor(private prismaService: PrismaService) {}
+export class UsersService extends PrismaCrudService<User> {
+  constructor(
+    private prismaService: PrismaService,
+    private readonly userRepo: UserRepository,
+  ) {
+    super(userRepo);
+  }
 
   async findByEmail(email: string): Promise<User | null> {
-    const user = await this.prismaService.user.findUnique({
-      where: {
-        email,
-      },
+    const user = await this.userRepo.findUnique({
+      where: { email },
     });
 
     return user;
   }
 
   async findById(id: string): Promise<User | null> {
-    const user = await this.prismaService.user.findUnique({
-      where: {
-        id,
-      },
+    const user = await this.userRepo.findUnique({
+      where: { id },
     });
     if (!user) throw new NotFoundException(`No user found with id: ${id}`);
     return user;
   }
 
   async findAll(): Promise<User[]> {
-    return await this.prismaService.user.findMany();
+    return await this.userRepo.findMany();
   }
 
   async searchByName(text: string): Promise<string[]> {
     const decodedText = decodeURIComponent(text).trim().toLowerCase();
-    const users = await this.prismaService.user.findMany();
+    const users = await this.userRepo.findMany();
 
     return users
-      .filter((user) => user.name && user.name.toLowerCase().includes(decodedText))
+      .filter(
+        (user) => user.name && user.name.toLowerCase().includes(decodedText),
+      )
       .map((user) => user.id);
   }
 
   async getStatsByEmail(email: string) {
-    const user = await this.prismaService.user.findUnique({
+    const user = await this.userRepo.findUnique({
       where: { email },
       select: { id: true },
     });
@@ -58,8 +63,12 @@ export class UsersService {
       await Promise.all([
         this.prismaService.workspace.count({ where: { ownerId: user.id } }),
         this.prismaService.snippet.count({ where: { authorId: user.id } }),
-        this.prismaService.doc.count({ where: { workspace: { ownerId: user.id } } }),
-        this.prismaService.workItem.count({ where: { workspace: { ownerId: user.id } } }),
+        this.prismaService.doc.count({
+          where: { workspace: { ownerId: user.id } },
+        }),
+        this.prismaService.workItem.count({
+          where: { workspace: { ownerId: user.id } },
+        }),
       ]);
 
     return {
@@ -94,8 +103,8 @@ export class UsersService {
       }));
   }
 
-  async create(createUserDTO: CreateUserDTO) {
-    return await this.prismaService.user.create({
+  async createUser(createUserDTO: CreateUserDTO) {
+    return this.userRepo.create({
       data: {
         email: createUserDTO.email,
         name: createUserDTO.name,

@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Patch, Body, Param, Req } from '@nestjs/common';
 import { SnippetsService } from './snippets.service';
 import { Request } from 'express';
-import { SnippetsCreateDto, SnippetsUpdateDto } from './snippets.dto';
+import { SnippetsCreateDto, SnippetsUpdateDto } from './dto/snippets.dto';
 import { CurrentUser } from 'src/modules/users/user.decorator';
 import { User } from '@prisma/client';
 

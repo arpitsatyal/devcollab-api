@@ -1,27 +1,25 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/common/services/prisma.service';
-import { SnippetsCreateDto, SnippetsUpdateDto } from './snippets.dto';
-import { Prisma } from '@prisma/client';
+import { Injectable } from '@nestjs/common';
+import { SnippetsCreateDto, SnippetsUpdateDto } from './dto/snippets.dto';
+import { Prisma, Snippet } from '@prisma/client';
 import { QstashService } from 'src/common/qstash/qstash.service';
+import { PrismaCrudService } from 'src/common/services/prisma-crud.service';
+import { SnippetRepository } from './repositories/snippet.repository';
 
 @Injectable()
-export class SnippetsService {
+export class SnippetsService extends PrismaCrudService<Snippet> {
   constructor(
-    private prisma: PrismaService,
     private qstashService: QstashService,
-  ) {}
+    private readonly snippetRepo: SnippetRepository,
+  ) {
+    super(snippetRepo);
+  }
 
   async getSnippet(snippetId: string) {
-    const snippet = await this.prisma.snippet.findUnique({
-      where: { id: snippetId },
-    });
-
-    if (!snippet) throw new NotFoundException('Snippet not found');
-    return snippet;
+    return this.findByIdOrThrow(snippetId, 'Snippet');
   }
 
   async getSnippets(workspaceId: string) {
-    return this.prisma.snippet.findMany({
+    return this.snippetRepo.findMany({
       where: { workspaceId },
     });
   }
@@ -31,14 +29,14 @@ export class SnippetsService {
     authorId: string,
     dto: SnippetsCreateDto,
   ) {
-    const snippet = await this.prisma.snippet.create({
+    const snippet = await this.snippetRepo.create({
       data: {
         title: dto.title,
         language: dto.language,
         content: dto.content,
         extension: dto.extension,
-        authorId,
-        workspaceId,
+        author: { connect: { id: authorId } },
+        workspace: { connect: { id: workspaceId } },
       },
     });
 
@@ -59,7 +57,7 @@ export class SnippetsService {
       }),
     };
 
-    const updated = await this.prisma.snippet.update({
+    const updated = await this.snippetRepo.update({
       where: { id: snippetId },
       data: updateData,
     });

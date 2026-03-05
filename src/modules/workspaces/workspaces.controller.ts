@@ -11,7 +11,7 @@ import {
 import { WorkspacesService } from './workspaces.service';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { SessionAuthGuard } from 'src/common/guards/auth.guard';
-import { CreateWorkspaceDto } from './workspaces.dto';
+import { CreateWorkspaceDto, ImportRepositoryDto } from './dto/workspaces.dto';
 import { CurrentUser } from 'src/modules/users/user.decorator';
 import { User } from '@prisma/client';
 
@@ -35,7 +35,7 @@ export class WorkspacesController {
 
   @Post('import')
   importRepository(
-    @Body() body: { url: string; selectedFiles: string[] },
+    @Body() body: ImportRepositoryDto,
     @CurrentUser() user: User,
   ) {
     return this.workspacesService.importRepository({
@@ -51,10 +51,7 @@ export class WorkspacesController {
   }
 
   @Post()
-  addNewWorkspace(
-    @Body() body: CreateWorkspaceDto,
-    @CurrentUser() user: User,
-  ) {
+  addNewWorkspace(@Body() body: CreateWorkspaceDto, @CurrentUser() user: User) {
     return this.workspacesService.addNewWorkspace(body, user);
   }
 

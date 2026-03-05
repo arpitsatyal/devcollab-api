@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { PromptPort } from '../contracts/ports';
 
 export const IntentSchema = z.object({
-  intent: z.enum(['PROJECT_QUERY', 'CONVERSATIONAL']),
+  intent: z.enum(['WORKSPACE_QUERY', 'CONVERSATIONAL']),
   scope: z.enum(['APP_SPECIFIC', 'OUT_OF_SCOPE']),
   confidence: z.number().min(0).max(1),
 });
@@ -40,14 +40,16 @@ If the answer isn't in the context, say so and suggest what data would help. Pro
       new SystemMessage(
         'You are DevCollab AI Assistant. Use the provided tools to gather workspace-specific information before answering. Always stay within the workspace scope.',
       ),
-      new HumanMessage(`Conversation history:\n${history}\n\nUser question: ${question}`),
+      new HumanMessage(
+        `Conversation history:\n${history}\n\nUser question: ${question}`,
+      ),
     ];
   }
 
   buildIntentClassificationPrompt(question: string) {
     return [
       new SystemMessage(
-        'Classify the user intent. Decide if the user asks about DevCollab workspace data (PROJECT_QUERY) or is just casual chat (CONVERSATIONAL). Determine scope: APP_SPECIFIC if it clearly refers to app data, OUT_OF_SCOPE otherwise. Return JSON with fields intent, scope, confidence (0-1).',
+        'Classify the user intent. Decide if the user asks about DevCollab workspace data (WORKSPACE_QUERY) or is just casual chat (CONVERSATIONAL). Determine scope: APP_SPECIFIC if it clearly refers to app data, OUT_OF_SCOPE otherwise. Return JSON with fields intent, scope, confidence (0-1).',
       ),
       new HumanMessage(question),
     ];
@@ -58,7 +60,9 @@ If the answer isn't in the context, say so and suggest what data would help. Pro
       new SystemMessage(
         'You are a friendly DevCollab assistant. Keep answers short, relevant to the conversation, and avoid non-DevCollab topics. If the question is unrelated to DevCollab, gently steer back.',
       ),
-      new HumanMessage(`Conversation history:\n${history}\n\nUser question: ${question}`),
+      new HumanMessage(
+        `Conversation history:\n${history}\n\nUser question: ${question}`,
+      ),
     ];
   }
 }

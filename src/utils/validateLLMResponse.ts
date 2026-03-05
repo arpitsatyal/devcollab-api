@@ -13,7 +13,12 @@ export async function validateResponse(
     response.toLowerCase().includes(phrase),
   );
 
-  const genericPhrases = ['typically', 'usually', 'in general', 'most platforms'];
+  const genericPhrases = [
+    'typically',
+    'usually',
+    'in general',
+    'most platforms',
+  ];
 
   const isTooGeneric = genericPhrases.some((phrase) =>
     response.toLowerCase().includes(phrase),

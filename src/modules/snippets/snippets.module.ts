@@ -3,10 +3,11 @@ import { SnippetsService } from './snippets.service';
 import { SnippetsController } from './snippets.controller';
 import { PrismaService } from 'src/common/services/prisma.service';
 import { QstashModule } from 'src/common/qstash/qstash.module';
+import { SnippetRepository } from './repositories/snippet.repository';
 
 @Module({
   imports: [QstashModule],
-  providers: [SnippetsService, PrismaService],
+  providers: [SnippetsService, SnippetRepository, PrismaService],
   controllers: [SnippetsController],
 })
 export class SnippetsModule {}

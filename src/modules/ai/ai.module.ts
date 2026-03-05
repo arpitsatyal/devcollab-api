@@ -14,8 +14,15 @@ import { GroqLlmService } from './engine/llms/groqLLM';
 import { VectorStoreService } from './engine/pinecone/vectorStore';
 import { ChatEngineConfig } from './engine/contracts/ports';
 import { PrismaMessageStore } from './engine/adapters/prismaMessageStore';
+import { MessageModule } from '../message/message.module';
+import { WorkItemsModule } from '../work-items/work-items.module';
+import { ChatHistoryRepository } from './engine/repositories/chat-history.repository';
+import { SnippetRepository } from '../snippets/repositories/snippet.repository';
+import { DocRepository } from '../docs/repositories/doc.repository';
+import { WorkItemRepository } from '../work-items/repositories/work-item.repository';
 
 @Module({
+  imports: [MessageModule, WorkItemsModule],
   providers: [
     AiService,
     ChatEngineService,
@@ -30,6 +37,10 @@ import { PrismaMessageStore } from './engine/adapters/prismaMessageStore';
     VectorStoreService,
     ChatEngineConfig,
     PrismaMessageStore,
+    ChatHistoryRepository,
+    SnippetRepository,
+    DocRepository,
+    WorkItemRepository,
     PrismaService,
   ],
   controllers: [AiController],

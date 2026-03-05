@@ -1,0 +1,20 @@
+import {
+  IsEnum,
+  IsObject,
+  IsString,
+  IsUUID,
+  IsOptional,
+} from 'class-validator';
+import { SyncType } from 'src/common/pinecone/pinecone.service';
+
+export class VectorSyncPayloadDto {
+  @IsEnum(['workspace', 'workItem', 'snippet', 'doc'] as any)
+  type: SyncType;
+
+  @IsObject()
+  data: { id: string };
+
+  @IsOptional()
+  @IsString()
+  action?: 'upsert' | 'delete';
+}

@@ -1,38 +1,35 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PrismaService } from 'src/common/services/prisma.service';
+import { Prisma, Doc } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
-import { DocCreateDto, DocUpdateDto } from './docs.dto';
+import { DocCreateDto, DocUpdateDto } from './dto/docs.dto';
 import { QstashService } from 'src/common/qstash/qstash.service';
+import { PrismaCrudService } from 'src/common/services/prisma-crud.service';
+import { DocRepository } from './repositories/doc.repository';
 
 @Injectable()
-export class DocsService {
+export class DocsService extends PrismaCrudService<Doc> {
   constructor(
-    private prisma: PrismaService,
     private qstashService: QstashService,
-  ) {}
+    private readonly docRepo: DocRepository,
+  ) {
+    super(docRepo);
+  }
 
   async getDoc(docId: string) {
-    const doc = await this.prisma.doc.findUnique({
-      where: { id: docId },
-    });
-
-    if (!doc) throw new NotFoundException('Doc not found');
-
-    return doc;
+    return this.findByIdOrThrow(docId, 'Doc');
   }
 
   async getDocs(workspaceId: string) {
-    return this.prisma.doc.findMany({
+    return this.docRepo.findMany({
       where: { workspaceId },
     });
   }
 
   async createDoc(workspaceId: string, dto: DocCreateDto) {
-    const doc = await this.prisma.doc.create({
+    const doc = await this.docRepo.create({
       data: {
         label: dto.label,
-        workspaceId,
+        workspace: { connect: { id: workspaceId } },
         roomId: `docs_${uuidv4()}`,
       },
     });
@@ -48,7 +45,7 @@ export class DocsService {
     };
 
     try {
-      const updated = await this.prisma.doc.update({
+      const updated = await this.docRepo.update({
         where: { id: docId },
         data: updateData,
       });

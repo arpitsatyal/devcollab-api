@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Patch, Body, Param } from '@nestjs/common';
 import { DocsService } from './docs.service';
-import { DocCreateDto, DocUpdateDto } from './docs.dto';
+import { DocCreateDto, DocUpdateDto } from './dto/docs.dto';
 
 @Controller('workspaces/:workspaceId/docs')
 // @UseGuards(SessionAuthGuard)
@@ -18,7 +18,10 @@ export class DocsController {
   }
 
   @Post()
-  createDoc(@Param('workspaceId') workspaceId: string, @Body() dto: DocCreateDto) {
+  createDoc(
+    @Param('workspaceId') workspaceId: string,
+    @Body() dto: DocCreateDto,
+  ) {
     return this.docsService.createDoc(workspaceId, dto);
   }
 

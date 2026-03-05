@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { AIMessage, BaseMessage, HumanMessage, ToolMessage } from '@langchain/core/messages';
-import { StringOutputParser } from '@langchain/core/output_parsers';
 import {
-  ChatEngineConfig,
-} from '../contracts/ports';
+  AIMessage,
+  BaseMessage,
+  HumanMessage,
+  ToolMessage,
+} from '@langchain/core/messages';
+import { StringOutputParser } from '@langchain/core/output_parsers';
+import { ChatEngineConfig } from '../contracts/ports';
 import { IntentSchema, PromptService } from './promptService';
 import { RetrievalService } from './retrievalService';
 import { GenerationService } from './generationService';
@@ -21,16 +24,23 @@ export class ChatEngineService {
     private readonly llmGateway: LlmFactoryService,
     private readonly historyStore: PrismaMessageStore,
     private readonly config: ChatEngineConfig,
-  ) { }
+  ) {}
 
-  private async getAIResponseWithTools(chatId: string, question: string, workspaceId: string) {
+  private async getAIResponseWithTools(
+    chatId: string,
+    question: string,
+    workspaceId: string,
+  ) {
     const { list: tools, byName: toolsByName } = this.toolService.getTools();
 
     const llmWithTools = await this.llmGateway.getReasoningToolBoundLLM(tools);
     const history = await this.historyStore.getRecentHistory(chatId, 10);
     const calledTools: string[] = [];
 
-    let messages: BaseMessage[] = this.promptService.buildChatMessages(history, question);
+    let messages: BaseMessage[] = this.promptService.buildChatMessages(
+      history,
+      question,
+    );
 
     let iterations = 0;
     while (iterations < this.config.maxIterations) {
@@ -90,7 +100,10 @@ export class ChatEngineService {
   ) {
     const queryGenLlm = await this.llmGateway.getReasoningLLM();
 
-    const queries = await this.retrievalService.generateQueryVariations(question, queryGenLlm);
+    const queries = await this.retrievalService.generateQueryVariations(
+      question,
+      queryGenLlm,
+    );
     const filteredResults = await this.retrievalService.performHybridSearch(
       queries,
       question,
@@ -114,16 +127,20 @@ export class ChatEngineService {
     const context =
       filteredResults.length > 0
         ? filteredResults
-          .map(([doc]: any) => {
-            const type = doc.metadata?.type || 'General Info';
-            const title = doc.metadata?.workspaceTitle || 'Unknown Workspace';
-            return `--- Source: Information from ${type} within workspace "${title}" ---\n${doc.pageContent}`;
-          })
-          .join('\n\n')
+            .map(([doc]: any) => {
+              const type = doc.metadata?.type || 'General Info';
+              const title = doc.metadata?.workspaceTitle || 'Unknown Workspace';
+              return `--- Source: Information from ${type} within workspace "${title}" ---\n${doc.pageContent}`;
+            })
+            .join('\n\n')
         : "I don't have enough specific information in my records to answer this fully.";
 
     const history = await this.historyStore.getRecentHistory(chatId, 10);
-    const fullPrompt = await this.promptService.constructPrompt(context, history, question);
+    const fullPrompt = await this.promptService.constructPrompt(
+      context,
+      history,
+      question,
+    );
     const answerLlm = await this.llmGateway.getSpeedyLLM();
     return this.generationService.generateAnswer(
       answerLlm,
@@ -133,14 +150,19 @@ export class ChatEngineService {
     );
   }
 
-  async getAIResponse(chatId: string, question: string, filters?: Record<string, any>) {
+  async getAIResponse(
+    chatId: string,
+    question: string,
+    filters?: Record<string, any>,
+  ) {
     const classifierLlm = await this.llmGateway.getReasoningStructuredLLM(
       IntentSchema,
       'classify_intent',
     );
-    const intentMessages = this.promptService.buildIntentClassificationPrompt(question);
+    const intentMessages =
+      this.promptService.buildIntentClassificationPrompt(question);
 
-    let intent = 'PROJECT_QUERY';
+    let intent = 'WORKSPACE_QUERY';
     let scope: 'APP_SPECIFIC' | 'OUT_OF_SCOPE' = filters?.workspaceId
       ? 'APP_SPECIFIC'
       : 'OUT_OF_SCOPE';
@@ -151,10 +173,15 @@ export class ChatEngineService {
         intent = result.intent;
         scope = result.scope;
       } else {
-        console.warn('[Intent Classification] Low confidence, defaulting to PROJECT_QUERY');
+        console.warn(
+          '[Intent Classification] Low confidence, defaulting to WORKSPACE_QUERY',
+        );
       }
     } catch (e) {
-      console.warn('[Intent Classification] Failed, defaulting to PROJECT_QUERY:', e);
+      console.warn(
+        '[Intent Classification] Failed, defaulting to WORKSPACE_QUERY:',
+        e,
+      );
     }
 
     if (intent === 'CONVERSATIONAL') {
@@ -165,17 +192,21 @@ export class ChatEngineService {
           validated: { isValid: true, warning: null },
         };
       }
-      console.log('[Chat Engine] Intent classified as CONVERSATIONAL. Skipping tools/search.');
-      const history = await this.historyStore.getRecentHistory(chatId, 10);
-      const conversationalMessages = this.promptService.buildConversationalMessages(
-        history,
-        question,
+      console.log(
+        '[Chat Engine] Intent classified as CONVERSATIONAL. Skipping tools/search.',
       );
+      const history = await this.historyStore.getRecentHistory(chatId, 10);
+      const conversationalMessages =
+        this.promptService.buildConversationalMessages(history, question);
       const conversationalLlm = await this.llmGateway.getSpeedyLLM();
       const answer = await conversationalLlm
         .pipe(new StringOutputParser())
         .invoke(conversationalMessages);
-      return { answer, context: '', validated: { isValid: true, warning: null } };
+      return {
+        answer,
+        context: '',
+        validated: { isValid: true, warning: null },
+      };
     }
 
     if (scope === 'OUT_OF_SCOPE' && !filters?.workspaceId) {

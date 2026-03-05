@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { AiService } from '../services/ai.service';
+import { AskDto } from '../dto/ask.dto';
 
 @Controller('ai')
 // @UseGuards(AuthGuard)
@@ -7,13 +8,11 @@ export class AiController {
   constructor(private readonly aiService: AiService) {}
 
   @Post('ask')
-  ask(
-    @Body('chatId') chatId: string,
-    @Body('question') question: string,
-    @Body('workspaceId') workspaceId?: string,
-  ) {
-    const filters = workspaceId ? { workspaceId } : undefined;
-    return this.aiService.ask(chatId, question, filters);
+  ask(@Body() body: AskDto) {
+    const filters = body.workspaceId
+      ? { workspaceId: body.workspaceId }
+      : undefined;
+    return this.aiService.ask(body.chatId, body.question, filters);
   }
 
   @Post('analyze-work-item')

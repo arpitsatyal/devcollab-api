@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { PrismaService } from 'src/common/services/prisma.service';
 import { ToolRegistry } from '../contracts/ports';
+import { SnippetRepository } from 'src/modules/snippets/repositories/snippet.repository';
+import { DocRepository } from 'src/modules/docs/repositories/doc.repository';
+import { WorkItemRepository } from 'src/modules/work-items/repositories/work-item.repository';
 
 @Injectable()
 export class ToolService implements ToolRegistry {
@@ -11,7 +13,11 @@ export class ToolService implements ToolRegistry {
   private readonly existingWorkItemsTool: DynamicStructuredTool;
   private readonly semanticSearchTool: DynamicStructuredTool;
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly snippetRepo: SnippetRepository,
+    private readonly docRepo: DocRepository,
+    private readonly workItemRepo: WorkItemRepository,
+  ) {
     this.snippetsTool = new DynamicStructuredTool({
       name: 'get_snippets',
       description: 'Fetch snippets for a given workspace ID',
@@ -19,7 +25,7 @@ export class ToolService implements ToolRegistry {
         workspaceId: z.string().uuid().describe('Workspace ID'),
       }),
       func: async ({ workspaceId }) => {
-        const snippets = await this.prisma.snippet.findMany({
+        const snippets = await this.snippetRepo.findMany({
           where: { workspaceId },
           take: 5,
         });
@@ -41,7 +47,7 @@ export class ToolService implements ToolRegistry {
         workspaceId: z.string().uuid().describe('Workspace ID'),
       }),
       func: async ({ workspaceId }) => {
-        const docs = await this.prisma.doc.findMany({
+        const docs = await this.docRepo.findMany({
           where: { workspaceId },
           take: 5,
         });
@@ -65,7 +71,7 @@ export class ToolService implements ToolRegistry {
         workspaceId: z.string().uuid().describe('Workspace ID'),
       }),
       func: async ({ workspaceId }) => {
-        const workItems = await this.prisma.workItem.findMany({
+        const workItems = await this.workItemRepo.findMany({
           where: { workspaceId },
           take: 5,
         });
@@ -89,7 +95,7 @@ export class ToolService implements ToolRegistry {
         query: z.string().describe('Search query'),
       }),
       func: async ({ query, workspaceId }) => {
-        const snippets = await this.prisma.snippet.findMany({
+        const snippets = await this.snippetRepo.findMany({
           where: {
             workspaceId,
             OR: [
@@ -99,7 +105,7 @@ export class ToolService implements ToolRegistry {
           },
           take: 3,
         });
-        const workItems = await this.prisma.workItem.findMany({
+        const workItems = await this.workItemRepo.findMany({
           where: {
             workspaceId,
             OR: [
@@ -109,7 +115,7 @@ export class ToolService implements ToolRegistry {
           },
           take: 3,
         });
-        const docs = await this.prisma.doc.findMany({
+        const docs = await this.docRepo.findMany({
           where: {
             workspaceId,
             label: { contains: query, mode: 'insensitive' },

@@ -1,4 +1,12 @@
-import { IsDateString, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsDateString,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUUID,
+  IsArray,
+  ArrayUnique,
+} from 'class-validator';
 import { WorkItemStatus } from '@prisma/client';
 
 export class WorkItemCreateDto {
@@ -25,10 +33,13 @@ export class WorkItemCreateDto {
   dueDate?: Date | null;
 
   @IsOptional()
+  @IsArray()
+  @ArrayUnique()
+  @IsUUID(undefined, { each: true })
   snippetIds?: string[];
 }
 
-export class TaskUpdateStatusDto {
+export class WorkItemUpdateStatusDto {
   @IsEnum(WorkItemStatus)
   newStatus: WorkItemStatus;
 }

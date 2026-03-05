@@ -35,6 +35,6 @@ export class PineconeInferenceEmbeddings extends Embeddings {
       inputs: [document],
       parameters: { inputType: 'query', truncate: 'END' },
     });
-    return (response.data[0] as any).values as number[];
+    return response.data[0].values as number[];
   }
 }
