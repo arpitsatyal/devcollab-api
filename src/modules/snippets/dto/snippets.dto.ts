@@ -1,4 +1,4 @@
-import { IsOptional, IsString, MaxLength, IsIn, IsUUID } from 'class-validator';
+import { IsOptional, IsString, MaxLength, IsUUID } from 'class-validator';
 
 export class SnippetsCreateDto {
   @IsString()

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Res } from '@nestjs/common';
+import { Controller, Post, Body, Res } from '@nestjs/common';
 import { LiveblocksService } from './liveblocks.service';
 import { Response } from 'express';
 import { CurrentUser } from 'src/modules/users/user.decorator';

@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { StringOutputParser } from '@langchain/core/output_parsers';
-import { validateResponse } from 'src/utils/validateLLMResponse';
 import { GenerationPort } from '../contracts/ports';
 
 @Injectable()
@@ -37,12 +36,6 @@ export class GenerationService implements GenerationPort {
 
     answer = this.improveResponseWithCitations(answer, filteredResults);
 
-    const validated = await validateResponse(answer, context);
-
-    if ((validated as any).warning) {
-      console.log('warning', (validated as any).warning);
-    }
-
-    return { answer, context, validated };
+    return { answer, context };
   }
 }

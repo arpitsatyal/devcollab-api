@@ -1,10 +1,4 @@
-import {
-  IsEnum,
-  IsObject,
-  IsString,
-  IsUUID,
-  IsOptional,
-} from 'class-validator';
+import { IsEnum, IsObject, IsString, IsOptional } from 'class-validator';
 import { SyncType } from 'src/common/pinecone/pinecone.service';
 
 export class VectorSyncPayloadDto {

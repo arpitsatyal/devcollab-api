@@ -1,5 +1,4 @@
 import { NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 
 type DelegateWithId<Model> = {
   findUnique(args: {

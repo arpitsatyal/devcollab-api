@@ -1,6 +1,5 @@
-import { Controller, Get, Post, Patch, Body, Param, Req } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param } from '@nestjs/common';
 import { SnippetsService } from './snippets.service';
-import { Request } from 'express';
 import { SnippetsCreateDto, SnippetsUpdateDto } from './dto/snippets.dto';
 import { CurrentUser } from 'src/modules/users/user.decorator';
 import { User } from '@prisma/client';
@@ -11,10 +10,7 @@ export class SnippetsController {
   constructor(private snippetsService: SnippetsService) {}
 
   @Get()
-  async getSnippets(
-    @Param('workspaceId') workspaceId: string,
-    @Req() req: Request,
-  ) {
+  async getSnippets(@Param('workspaceId') workspaceId: string) {
     return this.snippetsService.getSnippets(workspaceId);
   }
 

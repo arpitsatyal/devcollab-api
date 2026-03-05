@@ -6,11 +6,9 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
 } from '@nestjs/common';
 import { WorkspacesService } from './workspaces.service';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
-import { SessionAuthGuard } from 'src/common/guards/auth.guard';
 import { CreateWorkspaceDto, ImportRepositoryDto } from './dto/workspaces.dto';
 import { CurrentUser } from 'src/modules/users/user.decorator';
 import { User } from '@prisma/client';

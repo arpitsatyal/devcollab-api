@@ -31,7 +31,7 @@ export interface GenerationPort {
     prompt: string,
     context: string,
     filteredResults: any[],
-  ): Promise<{ answer: string; context: string; validated: any }>;
+  ): Promise<{ answer: string; context: string }>;
 }
 
 export interface ToolRegistry {

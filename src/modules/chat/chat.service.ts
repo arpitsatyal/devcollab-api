@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/common/services/prisma.service';
 import { PrismaCrudService } from 'src/common/services/prisma-crud.service';
 import { Chat } from '@prisma/client';
+import { PrismaService } from 'src/common/services/prisma.service';
 
 @Injectable()
 export class ChatService extends PrismaCrudService<Chat> {

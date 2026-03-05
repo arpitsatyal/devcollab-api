@@ -1,8 +1,5 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
-import {
-  PineconeService,
-  SyncType,
-} from 'src/common/pinecone/pinecone.service';
+import { PineconeService } from 'src/common/pinecone/pinecone.service';
 import { VectorSyncPayloadDto } from './dto/vector-sync.dto';
 
 @Controller('webhooks/vector-sync')
