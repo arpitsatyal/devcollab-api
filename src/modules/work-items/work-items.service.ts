@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/common/services/prisma.service';
 import { QueueService } from 'src/modules/queue/queue.service';
 import {
@@ -17,7 +21,7 @@ export class WorkItemsService {
     private readonly queueService: QueueService,
     private readonly qstashService: QstashService,
     private readonly workItemRepo: WorkItemRepository,
-  ) { }
+  ) {}
 
   async getWorkItems(workspaceId: string) {
     if (!workspaceId) {
@@ -31,7 +35,8 @@ export class WorkItemsService {
 
   async getWorkItem(workItemId: string) {
     const item = await this.workItemRepo.findById(workItemId);
-    if (!item) throw new NotFoundException(`Work item with id ${workItemId} not found`);
+    if (!item)
+      throw new NotFoundException(`Work item with id ${workItemId} not found`);
     return item;
   }
 
@@ -55,8 +60,8 @@ export class WorkItemsService {
         authorId,
         snippets: dto.snippetIds
           ? {
-            connect: dto.snippetIds.map((id) => ({ id })),
-          }
+              connect: dto.snippetIds.map((id) => ({ id })),
+            }
           : undefined,
       },
     });

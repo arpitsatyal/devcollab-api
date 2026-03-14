@@ -15,7 +15,7 @@ export class UsersService {
   constructor(
     private prismaService: PrismaService,
     private readonly userRepo: UserRepository,
-  ) { }
+  ) {}
 
   async findByEmail(email: string): Promise<User | null> {
     const user = await this.userRepo.findUnique({

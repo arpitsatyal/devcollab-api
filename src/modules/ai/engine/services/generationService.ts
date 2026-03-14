@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { StringOutputParser } from '@langchain/core/output_parsers';
-import { GenerationPort } from '../contracts/ports';
+import { GenerationPort, SearchHit, AnswerPayload } from '../contracts/ports';
 
 @Injectable()
 export class GenerationService implements GenerationPort {
-  improveResponseWithCitations(answer: string, filteredResults: any[]) {
+  improveResponseWithCitations(answer: string, filteredResults: SearchHit[]) {
     if (filteredResults.length > 0 && !answer.includes('Source:')) {
       const sources = [
         ...new Set(
           filteredResults.map(
-            ([doc]: any) => doc.metadata?.type || 'Documentation',
+            ({ doc }) => doc.metadata?.type || 'Documentation',
           ),
         ),
       ];
@@ -30,12 +30,15 @@ export class GenerationService implements GenerationPort {
     llm: BaseChatModel,
     prompt: string,
     context: string,
-    filteredResults: any[],
-  ) {
-    let answer = await llm.pipe(new StringOutputParser()).invoke(prompt);
+    filteredResults: SearchHit[],
+  ): Promise<AnswerPayload> {
+    const answer = await llm.pipe(new StringOutputParser()).invoke(prompt);
 
-    answer = this.improveResponseWithCitations(answer, filteredResults);
+    const improved = this.improveResponseWithCitations(answer, filteredResults);
+    const sources = filteredResults.map(
+      ({ doc }) => doc.metadata?.type || 'Unknown',
+    );
 
-    return { answer, context };
+    return { answer: improved, context, sources };
   }
 }

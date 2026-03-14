@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { Workspace, User, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/common/services/prisma.service';
 import { CreateWorkspaceDto } from './dto/workspaces.dto';
@@ -19,11 +24,12 @@ export class WorkspacesService {
     private readonly workspaceRepo: WorkspaceRepository,
     private readonly importRepo: WorkspaceImportRepository,
     private readonly githubClient: GithubClient,
-  ) { }
+  ) {}
 
   async getWorkspace(id: string) {
     const workspace = await this.workspaceRepo.findById(id);
-    if (!workspace) throw new NotFoundException(`Workspace with id ${id} not found`);
+    if (!workspace)
+      throw new NotFoundException(`Workspace with id ${id} not found`);
     return workspace;
   }
 

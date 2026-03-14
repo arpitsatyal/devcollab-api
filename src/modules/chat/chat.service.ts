@@ -3,7 +3,7 @@ import { ChatRepository } from './repositories/chat.repository';
 
 @Injectable()
 export class ChatService {
-  constructor(private readonly chatRepo: ChatRepository) { }
+  constructor(private readonly chatRepo: ChatRepository) {}
 
   async getChatById(chatId: string) {
     const chat = await this.chatRepo.findUnique({

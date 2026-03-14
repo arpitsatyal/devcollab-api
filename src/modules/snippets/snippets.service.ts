@@ -9,11 +9,14 @@ export class SnippetsService {
   constructor(
     private qstashService: QstashService,
     private readonly snippetRepo: SnippetRepository,
-  ) { }
+  ) {}
 
   async getSnippet(snippetId: string) {
-    const snippet = await this.snippetRepo.findUnique({ where: { id: snippetId } });
-    if (!snippet) throw new NotFoundException(`Snippet with id ${snippetId} not found`);
+    const snippet = await this.snippetRepo.findUnique({
+      where: { id: snippetId },
+    });
+    if (!snippet)
+      throw new NotFoundException(`Snippet with id ${snippetId} not found`);
     return snippet;
   }
 

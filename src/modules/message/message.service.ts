@@ -3,7 +3,7 @@ import { MessageRepository } from './repositories/message.repository';
 
 @Injectable()
 export class MessageService {
-  constructor(private readonly repo: MessageRepository) { }
+  constructor(private readonly repo: MessageRepository) {}
 
   async saveUserMessage(chatId: string, content: string) {
     return this.repo.create({ data: { chatId, content, isUser: true } });

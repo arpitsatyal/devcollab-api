@@ -8,4 +8,4 @@ import { ChatRepository } from './repositories/chat.repository';
   providers: [ChatService, PrismaService, ChatRepository],
   controllers: [ChatController],
 })
-export class ChatModule { }
+export class ChatModule {}

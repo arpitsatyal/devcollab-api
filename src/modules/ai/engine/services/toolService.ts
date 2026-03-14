@@ -57,7 +57,11 @@ export class ToolService implements ToolRegistry {
     } as any);
   }
 
-  private async handleGetSnippets({ workspaceId }: { workspaceId: string }): Promise<string> {
+  private async handleGetSnippets({
+    workspaceId,
+  }: {
+    workspaceId: string;
+  }): Promise<string> {
     const snippets = await this.snippetRepo.findMany({
       where: { workspaceId },
       take: 5,
@@ -67,7 +71,11 @@ export class ToolService implements ToolRegistry {
     return JSON.stringify(snippets);
   }
 
-  private async handleGetDocs({ workspaceId }: { workspaceId: string }): Promise<string> {
+  private async handleGetDocs({
+    workspaceId,
+  }: {
+    workspaceId: string;
+  }): Promise<string> {
     const docs = await this.docRepo.findMany({
       where: { workspaceId },
       take: 5,
@@ -85,7 +93,11 @@ export class ToolService implements ToolRegistry {
     );
   }
 
-  private async handleGetWorkItems({ workspaceId }: { workspaceId: string }): Promise<string> {
+  private async handleGetWorkItems({
+    workspaceId,
+  }: {
+    workspaceId: string;
+  }): Promise<string> {
     const workItems = await this.workItemRepo.findMany({
       where: { workspaceId },
       take: 5,
@@ -95,7 +107,13 @@ export class ToolService implements ToolRegistry {
     return JSON.stringify(workItems);
   }
 
-  private async handleSemanticSearch({ query, workspaceId }: { query: string; workspaceId: string }): Promise<string> {
+  private async handleSemanticSearch({
+    query,
+    workspaceId,
+  }: {
+    query: string;
+    workspaceId: string;
+  }): Promise<string> {
     const snippets = await this.snippetRepo.findMany({
       where: {
         workspaceId,
@@ -153,7 +171,7 @@ export class ToolService implements ToolRegistry {
   }
 
   getTools() {
-    const list = [
+    const list: DynamicStructuredTool[] = [
       this.snippetsTool,
       this.docsTool,
       this.existingWorkItemsTool,

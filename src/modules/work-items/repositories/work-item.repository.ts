@@ -4,7 +4,7 @@ import { PrismaService } from 'src/common/services/prisma.service';
 
 @Injectable()
 export class WorkItemRepository {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   findMany(args: Prisma.WorkItemFindManyArgs) {
     return this.prisma.workItem.findMany(args);

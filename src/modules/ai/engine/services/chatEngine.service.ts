@@ -6,7 +6,9 @@ import {
   ToolMessage,
 } from '@langchain/core/messages';
 import { StringOutputParser } from '@langchain/core/output_parsers';
-import { ChatEngineConfig } from '../contracts/ports';
+import { ChatEngineConfig, SearchHit } from '../contracts/ports';
+import { RunnableLike } from '@langchain/core/runnables';
+import { z } from 'zod';
 import { IntentSchema, PromptService } from './promptService';
 import { RetrievalService } from './retrievalService';
 import { GenerationService } from './generationService';
@@ -63,7 +65,10 @@ export class ChatEngineService {
           ];
           continue;
         }
-        const result = await tool.invoke({ ...toolCall.args, workspaceId });
+        const result = (await tool.invoke({
+          ...toolCall.args,
+          workspaceId,
+        })) as string;
         messages = [
           ...messages,
           new ToolMessage({
@@ -118,7 +123,7 @@ export class ChatEngineService {
       };
     }
 
-    filteredResults.forEach(([doc, score]: any, i: number) => {
+    filteredResults.forEach(({ doc, score }: SearchHit, i: number) => {
       console.log(
         `Result ${i + 1}: Score: ${score.toFixed(4)}, Type: ${doc.metadata?.type}, Title: ${doc.metadata?.workspaceTitle}`,
       );
@@ -127,7 +132,7 @@ export class ChatEngineService {
     const context =
       filteredResults.length > 0
         ? filteredResults
-            .map(([doc]: any) => {
+            .map(({ doc }) => {
               const type = doc.metadata?.type || 'General Info';
               const title = doc.metadata?.workspaceTitle || 'Unknown Workspace';
               return `--- Source: Information from ${type} within workspace "${title}" ---\n${doc.pageContent}`;
@@ -142,12 +147,13 @@ export class ChatEngineService {
       question,
     );
     const answerLlm = await this.llmGateway.getSpeedyLLM();
-    return this.generationService.generateAnswer(
+    const generated = await this.generationService.generateAnswer(
       answerLlm,
       fullPrompt,
       context,
       filteredResults,
     );
+    return { ...generated, validated: { isValid: true, warning: null } };
   }
 
   async getAIResponse(
@@ -155,10 +161,13 @@ export class ChatEngineService {
     question: string,
     filters?: Record<string, any>,
   ) {
-    const classifierLlm = await this.llmGateway.getReasoningStructuredLLM(
+    type IntentResult = z.infer<typeof IntentSchema>;
+    const classifierLlm = (await this.llmGateway.getReasoningStructuredLLM(
       IntentSchema,
       'classify_intent',
-    );
+    )) as RunnableLike<BaseMessage[], IntentResult> & {
+      invoke: (input: BaseMessage[]) => Promise<IntentResult>;
+    };
     const intentMessages =
       this.promptService.buildIntentClassificationPrompt(question);
 
@@ -218,7 +227,8 @@ export class ChatEngineService {
     }
 
     if (filters?.workspaceId) {
-      return this.getAIResponseWithTools(chatId, question, filters.workspaceId);
+      const workspaceId = String(filters.workspaceId);
+      return this.getAIResponseWithTools(chatId, question, workspaceId);
     }
     return this.getAIResponseWithSearch(chatId, question, filters);
   }

@@ -10,7 +10,7 @@ export class DocsService {
   constructor(
     private qstashService: QstashService,
     private readonly docRepo: DocRepository,
-  ) { }
+  ) {}
 
   async getDoc(docId: string) {
     const doc = await this.docRepo.findUnique({ where: { id: docId } });

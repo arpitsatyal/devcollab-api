@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { StringOutputParser } from '@langchain/core/output_parsers';
+import { Document } from '@langchain/core/documents';
 import { PrismaService } from 'src/common/services/prisma.service';
 import { VectorStoreService } from '../pinecone/vectorStore';
-import { RetrievalPort } from '../contracts/ports';
+import { RetrievalPort, SearchHit, SearchDocument } from '../contracts/ports';
 
 @Injectable()
 export class RetrievalService implements RetrievalPort {
@@ -38,8 +39,11 @@ export class RetrievalService implements RetrievalPort {
     }
   }
 
-  private async keywordSearch(query: string, filters?: Record<string, any>) {
-    const results: any[] = [];
+  private async keywordSearch(
+    query: string,
+    filters?: Record<string, any>,
+  ): Promise<SearchDocument[]> {
+    const results: SearchDocument[] = [];
     const workspaceId = filters?.workspaceId;
 
     try {
@@ -145,7 +149,7 @@ export class RetrievalService implements RetrievalPort {
     queries: string[],
     originalQuery: string,
     filters?: Record<string, any>,
-  ) {
+  ): Promise<SearchHit[]> {
     const vectorStore = await this.vectorStoreService.getVectorStore();
 
     const vectorSearchPromises = queries.map((q) =>
@@ -155,32 +159,32 @@ export class RetrievalService implements RetrievalPort {
     const vectorResultsArrays = await Promise.all(vectorSearchPromises);
     const allVectorResults = vectorResultsArrays.flat();
 
-    const combinedResults: any[] = [];
+    const combinedResults: SearchHit[] = [];
     const seenContent = new Set<string>();
 
-    allVectorResults.forEach(([doc, score]) => {
+    allVectorResults.forEach(([doc, score]: [Document, number]) => {
       const signature = doc.pageContent.substring(0, 50);
       if (!seenContent.has(signature)) {
         seenContent.add(signature);
-        combinedResults.push([doc, score]);
+        combinedResults.push({ doc, score });
       }
     });
 
     const keywordResults = await this.keywordSearch(originalQuery, filters);
 
     keywordResults.forEach((doc) => {
-      const isDuplicate = combinedResults.some(([vDoc]) =>
-        vDoc.pageContent.includes(doc.pageContent.substring(0, 50)),
+      const isDuplicate = combinedResults.some((hit) =>
+        hit.doc.pageContent.includes(doc.pageContent.substring(0, 50)),
       );
       if (!isDuplicate) {
-        combinedResults.push([doc, 0.9] as any);
+        combinedResults.push({ doc, score: 0.9 });
       }
     });
 
-    combinedResults.sort((a, b) => b[1] - a[1]);
+    combinedResults.sort((a, b) => b.score - a.score);
 
     const finalResults = combinedResults
-      .filter(([doc, score]) => score >= this.scoreThreshold)
+      .filter((hit) => hit.score >= this.scoreThreshold)
       .slice(0, 10);
 
     return finalResults;
