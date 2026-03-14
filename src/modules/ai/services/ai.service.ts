@@ -7,11 +7,11 @@ import { WorkItemsService } from 'src/modules/work-items/work-items.service';
 @Injectable()
 export class AiService {
   constructor(
-    private readonly aiEngineService: ChatEngineService,
+    private readonly chatEngineService: ChatEngineService,
     private readonly suggestionService: SuggestionService,
     private readonly messageService: MessageService,
     private readonly workItemsService: WorkItemsService,
-  ) {}
+  ) { }
 
   async ask(chatId: string | undefined, question: string | undefined, filters?: Record<string, any>) {
     if (!chatId) {
@@ -23,7 +23,7 @@ export class AiService {
 
     await this.messageService.saveUserMessage(chatId, question);
 
-    const { answer } = await this.aiEngineService.getAIResponse(
+    const { answer } = await this.chatEngineService.getAIResponse(
       chatId,
       question,
       filters,

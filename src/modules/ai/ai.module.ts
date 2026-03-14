@@ -19,6 +19,7 @@ import { PromptPort } from './interfaces/prompt.port';
 import { ToolRegistry } from './interfaces/tool.port';
 import { RetrievalPort } from './interfaces/retrieval.port';
 import { MessageHistoryPort } from './interfaces/history.port';
+import { AgentPort } from './interfaces/agent.port';
 import { GenerationService } from './services/generationService';
 import { PromptService } from './services/promptService';
 import { RetrievalService } from './services/retrievalService';
@@ -31,16 +32,16 @@ import { ToolService } from './services/toolService';
     AiService,
     ChatEngineService,
     SuggestionService,
-    LangGraphService,
     { provide: GenerationPort, useClass: GenerationService },
     { provide: PromptPort, useClass: PromptService },
     { provide: RetrievalPort, useClass: RetrievalService },
     { provide: ToolRegistry, useClass: ToolService },
     { provide: MessageHistoryPort, useClass: MessageHistoryService },
+    { provide: AgentPort, useClass: LangGraphService },
     ChatHistoryRepository,
     SnippetRepository,
     DocRepository,
-    WorkItemRepository
+    WorkItemRepository,
   ],
   controllers: [AiController],
 })

@@ -11,6 +11,7 @@ import { RetrievalPort, SearchHit } from '../interfaces/retrieval.port';
 import { GenerationPort } from '../interfaces/generation.port';
 import { LlmGateway } from '../interfaces/llm.port';
 import { MessageHistoryPort } from '../interfaces/history.port';
+import { AgentPort } from '../interfaces/agent.port';
 
 @Injectable()
 export class ChatEngineService {
@@ -21,7 +22,7 @@ export class ChatEngineService {
     private readonly llmGateway: LlmGateway,
     private readonly historyStore: MessageHistoryPort,
     private readonly config: AiConfig,
-    private readonly langGraphService: LangGraphService,
+    private readonly langGraphService: AgentPort,
   ) { }
 
   private async getAIResponseWithTools(

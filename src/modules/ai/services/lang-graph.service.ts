@@ -9,9 +9,10 @@ import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { AiConfig } from '../ai.config';
 import { LlmGateway } from '../interfaces/llm.port';
 import { ToolRegistry } from '../interfaces/tool.port';
+import { AgentPort } from '../interfaces/agent.port';
 
 @Injectable()
-export class LangGraphService {
+export class LangGraphService implements AgentPort {
   constructor(
     private readonly llmGateway: LlmGateway,
     private readonly toolService: ToolRegistry,
