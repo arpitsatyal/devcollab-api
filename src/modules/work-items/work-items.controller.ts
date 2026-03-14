@@ -6,17 +6,19 @@ import {
   Query,
   Param,
   Body,
+  UseGuards,
 } from '@nestjs/common';
+import { SessionAuthGuard } from 'src/common/guards/auth.guard';
 import { WorkItemsService } from './work-items.service';
 import {
   WorkItemCreateDto,
   WorkItemUpdateStatusDto,
 } from './dto/work-items.dto';
-import { CurrentUser } from 'src/modules/users/user.decorator';
-import { User } from 'src/common/drizzle/schema';
+import { CurrentUser } from '../users/user.decorator';
+import type { User } from '../../common/drizzle/schema';
 
 @Controller('work-items')
-// @UseGuards(SessionAuthGuard)
+@UseGuards(SessionAuthGuard)
 export class WorkItemsController {
   constructor(private readonly workItemsService: WorkItemsService) {}
 

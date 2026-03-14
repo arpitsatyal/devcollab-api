@@ -6,11 +6,18 @@ import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class WorkspaceRepository {
-  constructor(private readonly drizzle: DrizzleService) {}
+  constructor(private readonly drizzle: DrizzleService) { }
 
   findById(id: string) {
     return this.drizzle.db.query.workspaces.findFirst({
       where: eq(workspaces.id, id),
+    });
+  }
+
+  findMany(skip = 0, take = 20) {
+    return this.drizzle.db.query.workspaces.findMany({
+      offset: skip,
+      limit: take,
     });
   }
 

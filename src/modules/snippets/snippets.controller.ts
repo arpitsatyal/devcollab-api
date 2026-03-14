@@ -1,13 +1,14 @@
-import { Controller, Get, Post, Patch, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards } from '@nestjs/common';
+import { SessionAuthGuard } from 'src/common/guards/auth.guard';
 import { SnippetsService } from './snippets.service';
 import { SnippetsCreateDto, SnippetsUpdateDto } from './dto/snippets.dto';
-import { CurrentUser } from 'src/modules/users/user.decorator';
-import { User } from 'src/common/drizzle/schema';
+import { CurrentUser } from '../users/user.decorator';
+import type { User } from '../../common/drizzle/schema';
 
 @Controller('workspaces/:workspaceId/snippets')
-// @UseGuards(AuthGuard)
+@UseGuards(SessionAuthGuard)
 export class SnippetsController {
-  constructor(private snippetsService: SnippetsService) {}
+  constructor(private snippetsService: SnippetsService) { }
 
   @Get()
   async getSnippets(@Param('workspaceId') workspaceId: string) {

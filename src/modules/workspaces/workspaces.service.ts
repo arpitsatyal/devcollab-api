@@ -28,6 +28,14 @@ export class WorkspacesService {
     return workspace;
   }
 
+  async getWorkspacesV1(params: {
+    skip?: number;
+    take?: number;
+  }) {
+    const { skip, take } = params;
+    return this.workspaceRepo.findMany(skip, take);
+  }
+
   async getWorkspaces(params: {
     user: { id: string };
     skip?: number;

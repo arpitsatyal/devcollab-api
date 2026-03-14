@@ -1,14 +1,15 @@
-import { Controller, Post, Body, Res } from '@nestjs/common';
+import { Controller, Post, Body, Res, UseGuards } from '@nestjs/common';
+import { SessionAuthGuard } from 'src/common/guards/auth.guard';
 import { LiveblocksService } from './liveblocks.service';
 import { Response } from 'express';
-import { CurrentUser } from 'src/modules/users/user.decorator';
+import { CurrentUser } from '../users/user.decorator';
 import { LiveblocksUserDto } from './liveblocksUser.dto';
 
 @Controller('liveblocks')
 export class LiveblocksController {
   constructor(private readonly liveblocksService: LiveblocksService) {}
 
-  // @UseGuards(SessionAuthGuard)
+  @UseGuards(SessionAuthGuard)
   @Post('auth')
   async authorize(
     @CurrentUser() user: LiveblocksUserDto,

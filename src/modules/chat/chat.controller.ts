@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Delete, Param } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, UseGuards } from '@nestjs/common';
+import { SessionAuthGuard } from 'src/common/guards/auth.guard';
 import { ChatService } from './chat.service';
-import { CurrentUser } from 'src/modules/users/user.decorator';
-import { User } from 'src/common/drizzle/schema';
+import { CurrentUser } from '../users/user.decorator';
+import type { User } from '../../common/drizzle/schema';
 
 @Controller('chats')
-// @UseGuards(AuthGuard)
+@UseGuards(SessionAuthGuard)
 export class ChatController {
   constructor(private chatService: ChatService) {}
 

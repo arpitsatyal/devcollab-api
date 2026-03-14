@@ -6,22 +6,29 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { WorkspacesService } from './workspaces.service';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { CreateWorkspaceDto, ImportRepositoryDto } from './dto/workspaces.dto';
-import { CurrentUser } from 'src/modules/users/user.decorator';
-import { User } from 'src/common/drizzle/schema';
+import { CurrentUser } from '../users/user.decorator';
+import type { User } from '../../common/drizzle/schema';
+import { SessionAuthGuard } from '../../common/guards/auth.guard';
 
 @Controller('workspaces')
-// @UseGuards(SessionAuthGuard)
+@UseGuards(SessionAuthGuard)
 export class WorkspacesController {
-  constructor(private workspacesService: WorkspacesService) {}
+  constructor(private workspacesService: WorkspacesService) { }
 
   @Get()
-  getWorkspaces(@Query() query: PaginationQueryDto, @CurrentUser() user: User) {
+  getWorkspaces(@Query() query: PaginationQueryDto, @CurrentUser() user: User | null) {
     const skip = parseInt(query.skip ?? '10');
     const take = parseInt(query.limit ?? '10');
+
+    //TODO: Remove this
+    if (!user) {
+      return this.workspacesService.getWorkspacesV1({ skip, take });
+    }
 
     return this.workspacesService.getWorkspaces({ user, skip, take });
   }

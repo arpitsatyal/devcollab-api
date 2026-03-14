@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { SessionAuthGuard } from 'src/common/guards/auth.guard';
 import { AiService } from '../services/ai.service';
 import { AskDto } from '../dto/ask.dto';
 
 @Controller('ai')
-// @UseGuards(AuthGuard)
+@UseGuards(SessionAuthGuard)
 export class AiController {
   constructor(private readonly aiService: AiService) {}
 

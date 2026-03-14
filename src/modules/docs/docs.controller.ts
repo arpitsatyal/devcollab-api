@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Patch, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards } from '@nestjs/common';
+import { SessionAuthGuard } from 'src/common/guards/auth.guard';
 import { DocsService } from './docs.service';
 import { DocCreateDto, DocUpdateDto } from './dto/docs.dto';
 
 @Controller('workspaces/:workspaceId/docs')
-// @UseGuards(SessionAuthGuard)
+@UseGuards(SessionAuthGuard)
 export class DocsController {
   constructor(private docsService: DocsService) {}
 

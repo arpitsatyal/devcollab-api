@@ -1,10 +1,11 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { SessionAuthGuard } from 'src/common/guards/auth.guard';
 import { UsersService } from './users.service';
 import { CurrentUser } from './user.decorator';
-import { User } from 'src/common/drizzle/schema';
+import type { User } from '../../common/drizzle/schema';
 
 @Controller('users')
-// @UseGuards(SessionAuthGuard)
+@UseGuards(SessionAuthGuard)
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
