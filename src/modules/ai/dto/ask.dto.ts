@@ -1,8 +1,9 @@
 import { IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 
 export class AskDto {
+  @IsOptional()
   @IsUUID()
-  chatId: string;
+  chatId?: string;
 
   @IsString()
   @MaxLength(4000)
@@ -11,4 +12,8 @@ export class AskDto {
   @IsOptional()
   @IsUUID()
   workspaceId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  projectId?: string;
 }

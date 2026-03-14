@@ -12,9 +12,9 @@ export class SuggestionService {
     private readonly llmFactory: LlmFactoryService,
   ) {}
 
-  async suggestWorkItems(workspaceId: string) {
+  async suggestWorkItems(workspaceId: string | undefined) {
     const workspace = await this.drizzle.db.query.workspaces.findFirst({
-      where: eq(workspaces.id, workspaceId),
+      where: eq(workspaces.id, workspaceId!),
       with: {
         snippets: { limit: 5 },
         docs: { limit: 5 },
@@ -58,14 +58,14 @@ Return 3 concrete work items with a short rationale. Respond in JSON array with 
   }
 
   async suggestSnippetFilenameForCode(params: {
-    workspaceId: string;
+    workspaceId: string | undefined;
     code: string;
     language?: string;
   }) {
     const { code, language, workspaceId } = params;
 
     const workspace = await this.drizzle.db.query.workspaces.findFirst({
-      where: eq(workspaces.id, workspaceId),
+      where: eq(workspaces.id, workspaceId!),
       columns: { title: true, description: true },
     });
 
@@ -85,9 +85,9 @@ Respond with a single filename (no extension) using kebab-case. Keep it under 40
     return name.replace(/[^a-zA-Z0-9-_]/g, '').toLowerCase();
   }
 
-  async generateImplementationPlan(workItemId: string) {
+  async generateImplementationPlan(workItemId: string | undefined) {
     const workItem = await this.drizzle.db.query.workItems.findFirst({
-      where: eq(workItems.id, workItemId),
+      where: eq(workItems.id, workItemId!),
       with: { 
         workspace: true, 
         snippets: { 

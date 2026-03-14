@@ -13,7 +13,7 @@ export class AiService {
     private readonly workItemsService: WorkItemsService,
   ) {}
 
-  async ask(chatId: string, question: string, filters?: Record<string, any>) {
+  async ask(chatId: string | undefined, question: string | undefined, filters?: Record<string, any>) {
     if (!chatId) {
       throw new BadRequestException('Chat Id is required.');
     }
@@ -34,7 +34,7 @@ export class AiService {
     return { answer };
   }
 
-  async analyzeWorkItem(workItemId: string) {
+  async analyzeWorkItem(workItemId: string | undefined) {
     if (!workItemId) throw new BadRequestException('Work item ID is required');
 
     const plan =
@@ -48,7 +48,7 @@ export class AiService {
   }
 
   async suggestSnippetFilename(params: {
-    workspaceId: string;
+    workspaceId: string | undefined;
     code: string;
     language?: string;
   }) {
@@ -62,7 +62,7 @@ export class AiService {
     return { fileName };
   }
 
-  async suggestWorkItems(workspaceId: string) {
+  async suggestWorkItems(workspaceId: string | undefined) {
     if (!workspaceId) throw new BadRequestException('Workspace ID is required');
     const suggestions =
       await this.suggestionService.suggestWorkItems(workspaceId);

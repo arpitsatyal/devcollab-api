@@ -1,10 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  AIMessage,
-  BaseMessage,
-  HumanMessage,
-  ToolMessage,
-} from '@langchain/core/messages';
+import { BaseMessage } from '@langchain/core/messages';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { ChatEngineConfig, SearchHit } from '../contracts/ports';
 import { RunnableLike } from '@langchain/core/runnables';
@@ -15,6 +10,7 @@ import { GenerationService } from './generationService';
 import { ToolService } from './toolService';
 import { LlmFactoryService } from '../llms/llmFactory';
 import { DrizzleMessageStore } from '../adapters/drizzleMessageStore';
+import { LangGraphService } from './lang-graph.service';
 
 @Injectable()
 export class ChatEngineService {
@@ -26,6 +22,7 @@ export class ChatEngineService {
     private readonly llmGateway: LlmFactoryService,
     private readonly historyStore: DrizzleMessageStore,
     private readonly config: ChatEngineConfig,
+    private readonly langGraphService: LangGraphService,
   ) {}
 
   private async getAIResponseWithTools(
@@ -33,68 +30,25 @@ export class ChatEngineService {
     question: string,
     workspaceId: string,
   ) {
-    const { list: tools, byName: toolsByName } = this.toolService.getTools();
-
-    const llmWithTools = await this.llmGateway.getReasoningToolBoundLLM(tools);
     const history = await this.historyStore.getRecentHistory(chatId, 10);
-    const calledTools: string[] = [];
-
-    let messages: BaseMessage[] = this.promptService.buildChatMessages(
+    const messages: BaseMessage[] = this.promptService.buildChatMessages(
       history,
       question,
     );
 
-    let iterations = 0;
-    while (iterations < this.config.maxIterations) {
-      iterations++;
-      const response = (await llmWithTools.invoke(messages)) as AIMessage;
-      messages = [...messages, response];
-
-      if (!response.tool_calls || response.tool_calls.length === 0) break;
-
-      for (const toolCall of response.tool_calls) {
-        calledTools.push(toolCall.name);
-        const tool = toolsByName[toolCall.name];
-        if (!tool) {
-          messages = [
-            ...messages,
-            new ToolMessage({
-              content: `Error: Tool ${toolCall.name} not found.`,
-              tool_call_id: toolCall.id!,
-            }),
-          ];
-          continue;
-        }
-        const result = (await tool.invoke({
-          ...toolCall.args,
-          workspaceId,
-        })) as string;
-        messages = [
-          ...messages,
-          new ToolMessage({
-            content: result,
-            tool_call_id: toolCall.id!,
-          }),
-        ];
-      }
-    }
+    const { answer, calledTools } = await this.langGraphService.runAgentGraph(
+      messages,
+      workspaceId,
+    );
 
     if (calledTools.length === 0) {
-      console.log('[Chat Engine] LLM answered directly (no tools called).');
+      console.log('[Chat Engine] LangGraph: LLM answered directly (no tools).');
     } else {
       console.log(
-        `[Chat Engine] Tools called (${calledTools.length}): ${calledTools.join(' -> ')}`,
+        `[Chat Engine] LangGraph tools used (${calledTools.length}): ${calledTools.join(' -> ')}`,
       );
     }
 
-    messages = [
-      ...messages,
-      new HumanMessage(
-        "Please provide your final answer to the user's question based on the information gathered.",
-      ),
-    ];
-    const llm = await this.llmGateway.getSpeedyLLM();
-    const answer = await llm.pipe(new StringOutputParser()).invoke(messages);
     return { answer, context: '', validated: { isValid: true, warning: null } };
   }
 

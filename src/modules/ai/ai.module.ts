@@ -19,6 +19,7 @@ import { ChatHistoryRepository } from './engine/repositories/chat-history.reposi
 import { SnippetRepository } from '../snippets/repositories/snippet.repository';
 import { DocRepository } from '../docs/repositories/doc.repository';
 import { WorkItemRepository } from '../work-items/repositories/work-item.repository';
+import { LangGraphService } from './engine/services/lang-graph.service';
 
 @Module({
   imports: [MessageModule, WorkItemsModule],
@@ -40,6 +41,7 @@ import { WorkItemRepository } from '../work-items/repositories/work-item.reposit
     SnippetRepository,
     DocRepository,
     WorkItemRepository,
+    LangGraphService,
   ],
   controllers: [AiController],
 })

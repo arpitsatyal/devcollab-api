@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { RunnableLike } from '@langchain/core/runnables';
 import { StructuredTool } from '@langchain/core/tools';
-import { ZodTypeAny } from 'zod';
 import { GroqLlmService } from './groqLLM';
 import { TogetherLlmService } from './togetherLLM';
 import { LlmGateway } from '../contracts/ports';
@@ -12,7 +11,7 @@ export class LlmFactoryService implements LlmGateway {
   constructor(
     private readonly togetherLlmService: TogetherLlmService,
     private readonly groqLlmService: GroqLlmService,
-  ) {}
+  ) { }
 
   async getReasoningLLM(): Promise<BaseChatModel> {
     return await Promise.resolve(
@@ -31,7 +30,7 @@ export class LlmFactoryService implements LlmGateway {
   }
 
   async getReasoningStructuredLLM(
-    schema: ZodTypeAny | Record<string, any>,
+    schema: any,
     name: string,
   ): Promise<RunnableLike<any, any>> {
     const primary = this.togetherLlmService.create();
