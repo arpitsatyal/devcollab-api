@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { DrizzleService } from 'src/common/drizzle/drizzle.service';
-import { LlmFactoryService } from '../llms/llmFactory';
 import { workspaces, workItems } from 'src/common/drizzle/schema';
 import { eq } from 'drizzle-orm';
+import { LlmFactoryService } from '../llms/llmFactory';
 
 @Injectable()
 export class SuggestionService {
   constructor(
     private readonly drizzle: DrizzleService,
     private readonly llmFactory: LlmFactoryService,
-  ) {}
+  ) { }
 
   async suggestWorkItems(workspaceId: string | undefined) {
     const workspace = await this.drizzle.db.query.workspaces.findFirst({
@@ -88,14 +88,14 @@ Respond with a single filename (no extension) using kebab-case. Keep it under 40
   async generateImplementationPlan(workItemId: string | undefined) {
     const workItem = await this.drizzle.db.query.workItems.findFirst({
       where: eq(workItems.id, workItemId!),
-      with: { 
-        workspace: true, 
-        snippets: { 
+      with: {
+        workspace: true,
+        snippets: {
           limit: 5,
           with: {
-            snippet: true
-          }
-        } 
+            snippet: true,
+          },
+        },
       },
     });
 

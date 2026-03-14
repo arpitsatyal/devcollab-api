@@ -4,13 +4,13 @@ import { StringOutputParser } from '@langchain/core/output_parsers';
 import { ChatEngineConfig, SearchHit } from '../contracts/ports';
 import { RunnableLike } from '@langchain/core/runnables';
 import { z } from 'zod';
+import { LangGraphService } from './lang-graph.service';
 import { IntentSchema, PromptService } from './promptService';
 import { RetrievalService } from './retrievalService';
 import { GenerationService } from './generationService';
 import { ToolService } from './toolService';
 import { LlmFactoryService } from '../llms/llmFactory';
-import { DrizzleMessageStore } from '../adapters/drizzleMessageStore';
-import { LangGraphService } from './lang-graph.service';
+import { MessageHistoryService } from './messageHistoryService';
 
 @Injectable()
 export class ChatEngineService {
@@ -20,10 +20,10 @@ export class ChatEngineService {
     private readonly generationService: GenerationService,
     private readonly toolService: ToolService,
     private readonly llmGateway: LlmFactoryService,
-    private readonly historyStore: DrizzleMessageStore,
+    private readonly historyStore: MessageHistoryService,
     private readonly config: ChatEngineConfig,
     private readonly langGraphService: LangGraphService,
-  ) {}
+  ) { }
 
   private async getAIResponseWithTools(
     chatId: string,
@@ -86,12 +86,12 @@ export class ChatEngineService {
     const context =
       filteredResults.length > 0
         ? filteredResults
-            .map(({ doc }) => {
-              const type = doc.metadata?.type || 'General Info';
-              const title = doc.metadata?.workspaceTitle || 'Unknown Workspace';
-              return `--- Source: Information from ${type} within workspace "${title}" ---\n${doc.pageContent}`;
-            })
-            .join('\n\n')
+          .map(({ doc }) => {
+            const type = doc.metadata?.type || 'General Info';
+            const title = doc.metadata?.workspaceTitle || 'Unknown Workspace';
+            return `--- Source: Information from ${type} within workspace "${title}" ---\n${doc.pageContent}`;
+          })
+          .join('\n\n')
         : "I don't have enough specific information in my records to answer this fully.";
 
     const history = await this.historyStore.getRecentHistory(chatId, 10);

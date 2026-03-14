@@ -111,9 +111,7 @@ export class ToolService implements ToolRegistry {
       language: (s as any).language,
       content: this.safeParseContent((s as any).content).slice(0, 400) + '...',
     }));
-    return `Found exactly ${snippets.length} snippet(s) total in the workspace.\n${JSON.stringify(
-      output,
-    )}`;
+    return `Found exactly ${snippets.length} snippet(s) total in the workspace.\n${JSON.stringify(output)}`;
   }
 
   private async handleGetDocs(
@@ -138,9 +136,7 @@ export class ToolService implements ToolRegistry {
       label: d.label,
       content: this.safeParseContent(d.content).slice(0, 400) + '...',
     }));
-    return `Found exactly ${docs.length} doc(s) total in the workspace.\n${JSON.stringify(
-      output,
-    )}`;
+    return `Found exactly ${docs.length} doc(s) total in the workspace.\n${JSON.stringify(output)}`;
   }
 
   private async handleGetWorkItems(
@@ -166,9 +162,7 @@ export class ToolService implements ToolRegistry {
       description: w.description || '',
       status: w.status,
     }));
-    return `Found exactly ${workItems.length} task(s) total in the workspace.\n${JSON.stringify(
-      output,
-    )}`;
+    return `Found exactly ${workItems.length} task(s) total in the workspace.\n${JSON.stringify(output)}`;
   }
 
   private async handleSemanticSearch(
@@ -179,44 +173,21 @@ export class ToolService implements ToolRegistry {
     const workspaceId = this.getWorkspaceId(config);
     if (!workspaceId) return 'Workspace ID is required to run semantic search.';
 
-    const snippets = await this.snippetRepo.findManyBySearch(
-      workspaceId,
-      query,
-      3,
-    );
-    const workItems = await this.workItemRepo.findManyBySearch(
-      workspaceId,
-      query,
-      3,
-    );
+    const snippets = await this.snippetRepo.findManyBySearch(workspaceId, query, 3);
+    const workItems = await this.workItemRepo.findManyBySearch(workspaceId, query, 3);
     const docs = await this.docRepo.findManyByLabel(workspaceId, query, 3);
 
     if (snippets.length === 0 && workItems.length === 0 && docs.length === 0) {
       return 'No relevant content found for that query.';
     }
 
-    return JSON.stringify({
-      snippets,
-      workItems,
-      docs,
-    });
+    return JSON.stringify({ snippets, workItems, docs });
   }
 
-  getSnippetsTool() {
-    return this.snippetsTool;
-  }
-
-  getDocsTool() {
-    return this.docsTool;
-  }
-
-  getExistingWorkItemsTool() {
-    return this.existingWorkItemsTool;
-  }
-
-  getSemanticSearchTool() {
-    return this.semanticSearchTool;
-  }
+  getSnippetsTool() { return this.snippetsTool; }
+  getDocsTool() { return this.docsTool; }
+  getExistingWorkItemsTool() { return this.existingWorkItemsTool; }
+  getSemanticSearchTool() { return this.semanticSearchTool; }
 
   getTools() {
     const list: DynamicStructuredTool[] = [

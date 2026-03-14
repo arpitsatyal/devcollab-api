@@ -36,8 +36,8 @@ export class LlmFactoryService implements LlmGateway {
     const primary = this.togetherLlmService.create();
     const fallback = this.groqLlmService.create();
 
-    const structuredPrimary = primary.withStructuredOutput(schema, { name });
-    const structuredFallback = fallback.withStructuredOutput(schema, { name });
+    const structuredPrimary = (primary as any).withStructuredOutput(schema, { name });
+    const structuredFallback = (fallback as any).withStructuredOutput(schema, { name });
 
     return await Promise.resolve(
       structuredPrimary.withFallbacks({

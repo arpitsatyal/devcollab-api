@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AiController } from './controllers/ai.controller';
 import { AiService } from './services/ai.service';
-import { ChatEngineService } from './engine/services/chatEngine.service';
-import { SuggestionService } from './engine/services/suggestionService';
+import { ChatEngineService } from './services/chatEngine.service';
+import { SuggestionService } from './services/suggestionService';
 import { MessageService } from '../message/message.service';
 import { WorkItemsService } from '../work-items/work-items.service';
 
