@@ -24,21 +24,8 @@ export class ToolService implements ToolRegistry {
       schema: z.object({
         workspaceId: z.string().uuid().describe('Workspace ID'),
       }),
-      func: async ({ workspaceId }) => {
-        const snippets = await this.snippetRepo.findMany({
-          where: { workspaceId },
-          take: 5,
-        });
-        if (snippets.length === 0) return 'No snippets found.';
-        return JSON.stringify(
-          snippets.map((s) => ({
-            title: s.title,
-            language: s.language,
-            content: s.content,
-          })),
-        );
-      },
-    });
+      func: this.handleGetSnippets.bind(this),
+    } as any);
 
     this.docsTool = new DynamicStructuredTool({
       name: 'get_docs',
@@ -46,23 +33,8 @@ export class ToolService implements ToolRegistry {
       schema: z.object({
         workspaceId: z.string().uuid().describe('Workspace ID'),
       }),
-      func: async ({ workspaceId }) => {
-        const docs = await this.docRepo.findMany({
-          where: { workspaceId },
-          take: 5,
-        });
-        if (docs.length === 0) return 'No docs found.';
-        return JSON.stringify(
-          docs.map((d) => ({
-            label: d.label,
-            content:
-              typeof d.content === 'string'
-                ? d.content
-                : JSON.stringify(d.content || {}),
-          })),
-        );
-      },
-    });
+      func: this.handleGetDocs.bind(this),
+    } as any);
 
     this.existingWorkItemsTool = new DynamicStructuredTool({
       name: 'get_existing_work_items',
@@ -70,21 +42,8 @@ export class ToolService implements ToolRegistry {
       schema: z.object({
         workspaceId: z.string().uuid().describe('Workspace ID'),
       }),
-      func: async ({ workspaceId }) => {
-        const workItems = await this.workItemRepo.findMany({
-          where: { workspaceId },
-          take: 5,
-        });
-        if (workItems.length === 0) return 'No work items found.';
-        return JSON.stringify(
-          workItems.map((w) => ({
-            title: w.title,
-            status: w.status,
-            description: w.description,
-          })),
-        );
-      },
-    });
+      func: this.handleGetWorkItems.bind(this),
+    } as any);
 
     this.semanticSearchTool = new DynamicStructuredTool({
       name: 'semantic_search',
@@ -94,41 +53,86 @@ export class ToolService implements ToolRegistry {
         workspaceId: z.string().uuid().describe('Workspace ID'),
         query: z.string().describe('Search query'),
       }),
-      func: async ({ query, workspaceId }) => {
-        const snippets = await this.snippetRepo.findMany({
-          where: {
-            workspaceId,
-            OR: [
-              { title: { contains: query, mode: 'insensitive' } },
-              { content: { contains: query, mode: 'insensitive' } },
-            ],
-          },
-          take: 3,
-        });
-        const workItems = await this.workItemRepo.findMany({
-          where: {
-            workspaceId,
-            OR: [
-              { title: { contains: query, mode: 'insensitive' } },
-              { description: { contains: query, mode: 'insensitive' } },
-            ],
-          },
-          take: 3,
-        });
-        const docs = await this.docRepo.findMany({
-          where: {
-            workspaceId,
-            label: { contains: query, mode: 'insensitive' },
-          },
-          take: 3,
-        });
+      func: this.handleSemanticSearch.bind(this),
+    } as any);
+  }
 
-        return JSON.stringify({
-          snippets,
-          workItems,
-          docs,
-        });
+  private async handleGetSnippets({ workspaceId }: { workspaceId: string }): Promise<string> {
+    const snippets = await this.snippetRepo.findMany({
+      where: { workspaceId },
+      take: 5,
+      select: { title: true, language: true, content: true },
+    });
+    if (snippets.length === 0) return 'No snippets found.';
+    return JSON.stringify(snippets);
+  }
+
+  private async handleGetDocs({ workspaceId }: { workspaceId: string }): Promise<string> {
+    const docs = await this.docRepo.findMany({
+      where: { workspaceId },
+      take: 5,
+      select: { label: true, content: true },
+    });
+    if (docs.length === 0) return 'No docs found.';
+    return JSON.stringify(
+      docs.map((d) => ({
+        label: d.label,
+        content:
+          typeof d.content === 'string'
+            ? d.content
+            : JSON.stringify(d.content || {}),
+      })),
+    );
+  }
+
+  private async handleGetWorkItems({ workspaceId }: { workspaceId: string }): Promise<string> {
+    const workItems = await this.workItemRepo.findMany({
+      where: { workspaceId },
+      take: 5,
+      select: { title: true, status: true, description: true },
+    });
+    if (workItems.length === 0) return 'No work items found.';
+    return JSON.stringify(workItems);
+  }
+
+  private async handleSemanticSearch({ query, workspaceId }: { query: string; workspaceId: string }): Promise<string> {
+    const snippets = await this.snippetRepo.findMany({
+      where: {
+        workspaceId,
+        OR: [
+          { title: { contains: query, mode: 'insensitive' } },
+          { content: { contains: query, mode: 'insensitive' } },
+        ],
       },
+      take: 3,
+      select: { title: true, language: true, content: true },
+    });
+
+    const workItems = await this.workItemRepo.findMany({
+      where: {
+        workspaceId,
+        OR: [
+          { title: { contains: query, mode: 'insensitive' } },
+          { description: { contains: query, mode: 'insensitive' } },
+        ],
+      },
+      take: 3,
+      select: { title: true, status: true, description: true },
+    });
+
+    const docs = await this.docRepo.findMany({
+      where: {
+        workspaceId,
+        label: { contains: query, mode: 'insensitive' },
+      },
+      take: 3,
+      select: { label: true, content: true },
+    });
+
+    return JSON.stringify({
+      snippets,
+      workItems,
+      docs,
     });
   }
 

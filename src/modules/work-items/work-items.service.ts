@@ -1,41 +1,42 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/common/services/prisma.service';
 import { QueueService } from 'src/modules/queue/queue.service';
 import {
   WorkItemCreateDto,
   WorkItemUpdateStatusDto,
 } from './dto/work-items.dto';
-import { Prisma, WorkItem, WorkItemStatus } from '@prisma/client';
+import { Prisma, WorkItemStatus } from '@prisma/client';
 import dayjs from 'dayjs';
 import { QstashService } from 'src/common/qstash/qstash.service';
-import { PrismaCrudService } from 'src/common/services/prisma-crud.service';
+import { WorkItemRepository } from './repositories/work-item.repository';
 
 @Injectable()
-export class WorkItemsService extends PrismaCrudService<WorkItem> {
+export class WorkItemsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly queueService: QueueService,
     private readonly qstashService: QstashService,
-  ) {
-    super(prisma.workItem);
-  }
+    private readonly workItemRepo: WorkItemRepository,
+  ) { }
 
   async getWorkItems(workspaceId: string) {
     if (!workspaceId) {
       throw new BadRequestException('Workspace ID is required');
     }
 
-    return this.prisma.workItem.findMany({
+    return this.workItemRepo.findMany({
       where: { workspaceId },
     });
   }
 
   async getWorkItem(workItemId: string) {
-    return this.findByIdOrThrow(workItemId, 'Work item');
+    const item = await this.workItemRepo.findById(workItemId);
+    if (!item) throw new NotFoundException(`Work item with id ${workItemId} not found`);
+    return item;
   }
 
-  override async update(id: string, data: Prisma.WorkItemUpdateInput) {
-    return super.update(id, data);
+  async update(id: string, data: Prisma.WorkItemUpdateInput) {
+    return this.workItemRepo.update({ where: { id }, data });
   }
 
   async createWorkItem(authorId: string, dto: WorkItemCreateDto) {
@@ -54,8 +55,8 @@ export class WorkItemsService extends PrismaCrudService<WorkItem> {
         authorId,
         snippets: dto.snippetIds
           ? {
-              connect: dto.snippetIds.map((id) => ({ id })),
-            }
+            connect: dto.snippetIds.map((id) => ({ id })),
+          }
           : undefined,
       },
     });
@@ -90,7 +91,7 @@ export class WorkItemsService extends PrismaCrudService<WorkItem> {
       throw new BadRequestException('newStatus is required');
     }
 
-    const updatedWorkItem = await this.prisma.workItem.update({
+    const updatedWorkItem = await this.workItemRepo.update({
       where: { id: workItemId },
       data: { status: dto.newStatus },
     });
@@ -120,7 +121,7 @@ export class WorkItemsService extends PrismaCrudService<WorkItem> {
     const now = dayjs();
     const thresholdDate = now.add(thresholdDays, 'day');
 
-    return this.prisma.workItem.findMany({
+    return this.workItemRepo.findMany({
       where: {
         dueDate: {
           gte: now.toDate(),

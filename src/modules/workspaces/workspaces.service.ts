@@ -1,7 +1,6 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Workspace, User, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/common/services/prisma.service';
-import { PrismaCrudService } from 'src/common/services/prisma-crud.service';
 import { CreateWorkspaceDto } from './dto/workspaces.dto';
 import { QstashService } from 'src/common/qstash/qstash.service';
 import { randomUUID } from 'crypto';
@@ -11,7 +10,7 @@ import { GithubClient } from './infrastructure/github.client';
 import { SNIPPET_EXTENSIONS } from './utils/constants';
 
 @Injectable()
-export class WorkspacesService extends PrismaCrudService<Workspace> {
+export class WorkspacesService {
   private readonly logger = new Logger(WorkspacesService.name);
 
   constructor(
@@ -20,12 +19,12 @@ export class WorkspacesService extends PrismaCrudService<Workspace> {
     private readonly workspaceRepo: WorkspaceRepository,
     private readonly importRepo: WorkspaceImportRepository,
     private readonly githubClient: GithubClient,
-  ) {
-    super(prisma.workspace);
-  }
+  ) { }
 
   async getWorkspace(id: string) {
-    return this.findByIdOrThrow(id, 'Workspace');
+    const workspace = await this.workspaceRepo.findById(id);
+    if (!workspace) throw new NotFoundException(`Workspace with id ${id} not found`);
+    return workspace;
   }
 
   async getWorkspaces(params: {

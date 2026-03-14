@@ -3,6 +3,7 @@ import { Strategy, VerifyCallback } from 'passport-google-oauth20';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UsersService } from 'src/modules/users/users.service';
 import { Profile } from 'passport';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
@@ -31,7 +32,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     let user = await this.userService.findByEmail(email);
 
     if (!user) {
-      user = await this.userService.create({
+      user = await this.userService.createUser({
         email,
         name: displayName,
         provider: 'GOOGLE',
@@ -39,6 +40,6 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       });
     }
 
-    done(null, user);
+    done(null, user as User);
   }
 }

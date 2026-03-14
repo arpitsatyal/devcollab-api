@@ -1,22 +1,21 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, Doc } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { DocCreateDto, DocUpdateDto } from './dto/docs.dto';
 import { QstashService } from 'src/common/qstash/qstash.service';
-import { PrismaCrudService } from 'src/common/services/prisma-crud.service';
 import { DocRepository } from './repositories/doc.repository';
 
 @Injectable()
-export class DocsService extends PrismaCrudService<Doc> {
+export class DocsService {
   constructor(
     private qstashService: QstashService,
     private readonly docRepo: DocRepository,
-  ) {
-    super(docRepo);
-  }
+  ) { }
 
   async getDoc(docId: string) {
-    return this.findByIdOrThrow(docId, 'Doc');
+    const doc = await this.docRepo.findUnique({ where: { id: docId } });
+    if (!doc) throw new NotFoundException(`Doc with id ${docId} not found`);
+    return doc;
   }
 
   async getDocs(workspaceId: string) {

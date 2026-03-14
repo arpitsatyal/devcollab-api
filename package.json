@@ -99,6 +99,12 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/$1"
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!(@octokit|universal-user-agent|@langchain|uuid|before-after-hook)/)"
+    ],
     "testEnvironment": "node"
   }
 }

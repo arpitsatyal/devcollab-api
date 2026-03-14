@@ -1,21 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { SnippetsCreateDto, SnippetsUpdateDto } from './dto/snippets.dto';
-import { Prisma, Snippet } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { QstashService } from 'src/common/qstash/qstash.service';
-import { PrismaCrudService } from 'src/common/services/prisma-crud.service';
 import { SnippetRepository } from './repositories/snippet.repository';
 
 @Injectable()
-export class SnippetsService extends PrismaCrudService<Snippet> {
+export class SnippetsService {
   constructor(
     private qstashService: QstashService,
     private readonly snippetRepo: SnippetRepository,
-  ) {
-    super(snippetRepo);
-  }
+  ) { }
 
   async getSnippet(snippetId: string) {
-    return this.findByIdOrThrow(snippetId, 'Snippet');
+    const snippet = await this.snippetRepo.findUnique({ where: { id: snippetId } });
+    if (!snippet) throw new NotFoundException(`Snippet with id ${snippetId} not found`);
+    return snippet;
   }
 
   async getSnippets(workspaceId: string) {

@@ -4,7 +4,7 @@ import { Prisma, Workspace } from '@prisma/client';
 
 @Injectable()
 export class WorkspaceRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   findById(id: string) {
     return this.prisma.workspace.findUnique({ where: { id } });
@@ -30,5 +30,13 @@ export class WorkspaceRepository {
     return this.prisma.userPinnedWorkspace.deleteMany({
       where: { userId, workspaceId },
     });
+  }
+
+  update(args: Prisma.WorkspaceUpdateArgs) {
+    return this.prisma.workspace.update(args);
+  }
+
+  delete(args: Prisma.WorkspaceDeleteArgs) {
+    return this.prisma.workspace.delete(args);
   }
 }

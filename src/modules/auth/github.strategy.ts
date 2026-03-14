@@ -30,7 +30,7 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
     let user = await this.userService.findByEmail(email);
 
     if (!user) {
-      user = await this.userService.create({
+      user = await this.userService.createUser({
         email,
         name: profile.displayName ?? profile.username,
         image: profile.photos?.[0]?.value,

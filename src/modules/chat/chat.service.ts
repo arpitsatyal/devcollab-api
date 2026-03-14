@@ -1,22 +1,25 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaCrudService } from 'src/common/services/prisma-crud.service';
-import { Chat } from '@prisma/client';
-import { PrismaService } from 'src/common/services/prisma.service';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { ChatRepository } from './repositories/chat.repository';
 
 @Injectable()
-export class ChatService extends PrismaCrudService<Chat> {
-  constructor(private prisma: PrismaService) {
-    super(prisma.chat);
-  }
+export class ChatService {
+  constructor(private readonly chatRepo: ChatRepository) { }
 
   async getChatById(chatId: string) {
-    return this.findByIdOrThrow(chatId, 'Chat', {
+    const chat = await this.chatRepo.findUnique({
+      where: { id: chatId },
       include: { messages: { orderBy: { createdAt: 'asc' } } },
     });
+
+    if (!chat) {
+      throw new NotFoundException(`Chat with id ${chatId} not found`);
+    }
+
+    return chat;
   }
 
   async getChatsForUser(userId: string) {
-    return this.prisma.chat.findMany({
+    return this.chatRepo.findMany({
       where: { senderId: userId },
       orderBy: { updatedAt: 'desc' },
       include: { messages: true },
@@ -24,11 +27,11 @@ export class ChatService extends PrismaCrudService<Chat> {
   }
 
   async createChat(senderId: string) {
-    return this.create({ data: { senderId } });
+    return this.chatRepo.create({ data: { senderId } });
   }
 
   async deleteChat(chatId: string) {
-    await this.delete(chatId);
+    await this.chatRepo.delete({ where: { id: chatId } });
     return { success: true };
   }
 }

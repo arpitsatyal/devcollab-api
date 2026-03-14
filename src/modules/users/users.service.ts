@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/common/services/prisma.service';
-import { PrismaCrudService } from 'src/common/services/prisma-crud.service';
 import { UserRepository } from './repositories/user.repository';
 
 interface CreateUserDTO {
@@ -12,13 +11,11 @@ interface CreateUserDTO {
 }
 
 @Injectable()
-export class UsersService extends PrismaCrudService<User> {
+export class UsersService {
   constructor(
     private prismaService: PrismaService,
     private readonly userRepo: UserRepository,
-  ) {
-    super(userRepo);
-  }
+  ) { }
 
   async findByEmail(email: string): Promise<User | null> {
     const user = await this.userRepo.findUnique({
