@@ -1,4 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { UsersModule } from './modules/users/users.module';
@@ -19,6 +20,7 @@ import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,
     WorkspacesModule,
     UsersModule,
