@@ -1,22 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { StringOutputParser } from '@langchain/core/output_parsers';
-import { PrismaService } from 'src/common/services/prisma.service';
+import { DrizzleService } from 'src/common/drizzle/drizzle.service';
 import { LlmFactoryService } from '../llms/llmFactory';
+import { workspaces, workItems } from 'src/common/drizzle/schema';
+import { eq } from 'drizzle-orm';
 
 @Injectable()
 export class SuggestionService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly llmFactory: LlmFactoryService,
   ) {}
 
   async suggestWorkItems(workspaceId: string) {
-    const workspace = await this.prisma.workspace.findUnique({
-      where: { id: workspaceId },
-      include: {
-        snippets: { take: 5 },
-        docs: { take: 5 },
-        workItems: { take: 5 },
+    const workspace = await this.drizzle.db.query.workspaces.findFirst({
+      where: eq(workspaces.id, workspaceId),
+      with: {
+        snippets: { limit: 5 },
+        docs: { limit: 5 },
+        workItems: { limit: 5 },
       },
     });
 
@@ -32,13 +34,13 @@ Workspace title: ${workspace.title}
 Workspace description: ${workspace.description || 'No description'}
 
 Existing work items:
-${workspace.workItems.map((w) => `- ${w.title} [${w.status}]`).join('\n') || 'None'}
+${workspace.workItems.map((w: any) => `- ${w.title} [${w.status}]`).join('\n') || 'None'}
 
 Recent snippets:
-${workspace.snippets.map((s) => `- ${s.title} (${s.language})`).join('\n') || 'None'}
+${workspace.snippets.map((s: any) => `- ${s.title} (${s.language})`).join('\n') || 'None'}
 
 Docs:
-${workspace.docs.map((d) => `- ${d.label}`).join('\n') || 'None'}
+${workspace.docs.map((d: any) => `- ${d.label}`).join('\n') || 'None'}
 
 Return 3 concrete work items with a short rationale. Respond in JSON array with fields:
 - title
@@ -62,9 +64,9 @@ Return 3 concrete work items with a short rationale. Respond in JSON array with 
   }) {
     const { code, language, workspaceId } = params;
 
-    const workspace = await this.prisma.workspace.findUnique({
-      where: { id: workspaceId },
-      select: { title: true, description: true },
+    const workspace = await this.drizzle.db.query.workspaces.findFirst({
+      where: eq(workspaces.id, workspaceId),
+      columns: { title: true, description: true },
     });
 
     const llm = await this.llmFactory.getSpeedyLLM();
@@ -84,9 +86,17 @@ Respond with a single filename (no extension) using kebab-case. Keep it under 40
   }
 
   async generateImplementationPlan(workItemId: string) {
-    const workItem = await this.prisma.workItem.findUnique({
-      where: { id: workItemId },
-      include: { workspace: true, snippets: { take: 5 } },
+    const workItem = await this.drizzle.db.query.workItems.findFirst({
+      where: eq(workItems.id, workItemId),
+      with: { 
+        workspace: true, 
+        snippets: { 
+          limit: 5,
+          with: {
+            snippet: true
+          }
+        } 
+      },
     });
 
     if (!workItem) {
@@ -101,7 +111,7 @@ Status: ${workItem.status}
 Description: ${workItem.description || 'No description'}
 Workspace: ${workItem.workspace.title}
 Related snippets:
-${workItem.snippets.map((s) => `- ${s.title} (${s.language})`).join('\n') || 'None'}
+${workItem.snippets.map((s: any) => `- ${s.snippet.title} (${s.snippet.language})`).join('\n') || 'None'}
 
 Return a JSON object with:
 - summary: short overview

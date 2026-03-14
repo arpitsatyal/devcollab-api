@@ -1,11 +1,8 @@
 import {
   BadRequestException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { Workspace, User, Prisma } from '@prisma/client';
-import { PrismaService } from 'src/common/services/prisma.service';
 import { CreateWorkspaceDto } from './dto/workspaces.dto';
 import { QstashService } from 'src/common/qstash/qstash.service';
 import { randomUUID } from 'crypto';
@@ -16,15 +13,13 @@ import { SNIPPET_EXTENSIONS } from './utils/constants';
 
 @Injectable()
 export class WorkspacesService {
-  private readonly logger = new Logger(WorkspacesService.name);
 
   constructor(
-    private prisma: PrismaService,
     private qstashService: QstashService,
     private readonly workspaceRepo: WorkspaceRepository,
     private readonly importRepo: WorkspaceImportRepository,
     private readonly githubClient: GithubClient,
-  ) {}
+  ) { }
 
   async getWorkspace(id: string) {
     const workspace = await this.workspaceRepo.findById(id);
@@ -34,32 +29,19 @@ export class WorkspacesService {
   }
 
   async getWorkspaces(params: {
-    user: User;
+    user: { id: string };
     skip?: number;
     take?: number;
-  }): Promise<Workspace[]> {
+  }) {
     const { skip, take, user } = params;
-
-    const userId = user.id;
-
-    return await this.workspaceRepo.findManyRaw(`
-        SELECT w.*,
-              (uww."userId" IS NOT NULL) AS "isPinned"
-        FROM "Workspace" w
-        LEFT JOIN "UserPinnedWorkspace" uww
-          ON uww."userId" = ${userId}
-          AND uww."workspaceId" = w."id"
-        ORDER BY "isPinned" DESC, w."createdAt" DESC
-        OFFSET ${skip}
-        LIMIT ${take};
-        `);
+    return this.workspaceRepo.findManyRaw(user.id, skip, take);
   }
 
-  async addNewWorkspace(dto: CreateWorkspaceDto, user: User) {
+  async addNewWorkspace(dto: CreateWorkspaceDto, user: { id: string }) {
     const workspace = await this.workspaceRepo.create({
       title: dto.title,
       description: dto.description,
-      owner: { connect: { id: user.id } },
+      ownerId: user.id,
     });
 
     await this.qstashService.publishSyncEvent('workspace', workspace);
@@ -68,7 +50,7 @@ export class WorkspacesService {
 
   async togglePinWorkspace(
     params: { isPinned: boolean },
-    user: User,
+    user: { id: string },
     workspaceId: string,
   ) {
     const { isPinned } = params;
@@ -101,7 +83,7 @@ export class WorkspacesService {
   async importRepository(params: {
     url: string;
     selectedFiles: string[];
-    user: User;
+    user: { id: string };
   }) {
     const { url, selectedFiles, user } = params;
     if (!url) throw new BadRequestException('GitHub URL is required');
@@ -113,7 +95,7 @@ export class WorkspacesService {
     const workspace = await this.workspaceRepo.create({
       title: repoDetails.repo,
       description: repoDetails.description,
-      owner: { connect: { id: user.id } },
+      ownerId: user.id,
     });
 
     const fetchResults = await Promise.all(
@@ -126,7 +108,6 @@ export class WorkspacesService {
           if (!content) return null;
           const ext = path.split('.').pop()?.toLowerCase();
           const fileName = path.split('/').pop() || '';
-
           return { path, fileName, ext, content };
         } catch (e) {
           console.error(`Failed to fetch ${path}:`, e);
@@ -135,8 +116,21 @@ export class WorkspacesService {
       }),
     );
 
-    const snippetsData: Prisma.SnippetCreateManyInput[] = [];
-    const docsData: Prisma.DocCreateManyInput[] = [];
+    const snippetsData: {
+      title: string;
+      language: string;
+      extension: string;
+      content: string;
+      workspaceId: string;
+      authorId: string;
+    }[] = [];
+
+    const docsData: {
+      label: string;
+      workspaceId: string;
+      roomId: string;
+      content: unknown;
+    }[] = [];
 
     for (const result of fetchResults) {
       if (!result) continue;

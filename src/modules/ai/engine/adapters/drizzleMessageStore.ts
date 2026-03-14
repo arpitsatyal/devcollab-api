@@ -3,7 +3,7 @@ import { MessageHistoryPort } from '../contracts/ports';
 import { ChatHistoryRepository } from '../repositories/chat-history.repository';
 
 @Injectable()
-export class PrismaMessageStore implements MessageHistoryPort {
+export class DrizzleMessageStore implements MessageHistoryPort {
   constructor(private readonly repo: ChatHistoryRepository) {}
 
   async getRecentHistory(chatId: string, limit: number): Promise<string> {

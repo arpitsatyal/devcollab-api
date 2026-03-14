@@ -8,14 +8,15 @@ import { VectorSyncController } from './vector-sync.controller';
 import { PineconeModule } from 'src/common/pinecone/pinecone.module';
 import { LiveblocksWebhookController } from './liveblocks-webhook.controller';
 import { LiveblocksWebhookService } from './liveblocks-webhook.service';
-import { QueueService } from '../queue/queue.service';
-import { PrismaService } from 'src/common/services/prisma.service';
+import { QueueModule } from '../queue/queue.module';
 import { RawBodyMiddleware } from 'src/common/middlewares/raw-body.middleware';
+import { UsersModule } from '../users/users.module';
+import { DocsModule } from '../docs/docs.module';
 
 @Module({
-  imports: [PineconeModule],
+  imports: [PineconeModule, QueueModule, UsersModule, DocsModule],
   controllers: [VectorSyncController, LiveblocksWebhookController],
-  providers: [LiveblocksWebhookService, QueueService, PrismaService],
+  providers: [LiveblocksWebhookService],
 })
 export class WebhooksModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

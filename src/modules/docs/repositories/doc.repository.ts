@@ -1,28 +1,73 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PrismaService } from 'src/common/services/prisma.service';
+import { eq, ilike, and } from 'drizzle-orm';
+import { DrizzleService } from 'src/common/drizzle/drizzle.service';
+import { docs } from 'src/common/drizzle/schema';
+import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class DocRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly drizzle: DrizzleService) {}
 
-  findUnique(args: { where: { id: string }; select?: any; include?: any }) {
-    return this.prisma.doc.findUnique(args);
+  findUnique(id: string) {
+    return this.drizzle.db.query.docs.findFirst({
+      where: eq(docs.id, id),
+    });
   }
 
-  findMany(args?: Prisma.DocFindManyArgs) {
-    return this.prisma.doc.findMany(args);
+  findByRoomId(roomId: string) {
+    return this.drizzle.db.query.docs.findFirst({
+      where: eq(docs.roomId, roomId),
+    });
   }
 
-  create(args: { data: Prisma.DocCreateInput }) {
-    return this.prisma.doc.create(args);
+  findMany(workspaceId: string, limit?: number) {
+    const query = this.drizzle.db
+      .select()
+      .from(docs)
+      .where(eq(docs.workspaceId, workspaceId));
+    if (limit) return query.limit(limit);
+    return query;
   }
 
-  update(args: { where: { id: string }; data: Prisma.DocUpdateInput }) {
-    return this.prisma.doc.update(args);
+  findManyByLabel(workspaceId: string, search: string, limit = 3) {
+    return this.drizzle.db
+      .select()
+      .from(docs)
+      .where(and(eq(docs.workspaceId, workspaceId), ilike(docs.label, `%${search}%`)))
+      .limit(limit);
   }
 
-  delete(args: { where: { id: string } }) {
-    return this.prisma.doc.delete(args);
+  async create(data: { label: string; workspaceId: string; roomId: string }) {
+    const [row] = await this.drizzle.db
+      .insert(docs)
+      .values({ id: uuid(), ...data })
+      .returning();
+    return row;
+  }
+
+  async update(id: string, data: Partial<{ content: unknown; updatedAt: Date }>) {
+    const [row] = await this.drizzle.db
+      .update(docs)
+      .set(data)
+      .where(eq(docs.id, id))
+      .returning();
+    return row;
+  }
+
+  async updateByRoomId(roomId: string, data: Partial<{ content: unknown; updatedAt: Date }>) {
+    const [row] = await this.drizzle.db
+      .update(docs)
+      .set(data)
+      .where(eq(docs.roomId, roomId))
+      .returning();
+    return row;
+  }
+
+  async delete(id: string) {
+    const [row] = await this.drizzle.db
+      .delete(docs)
+      .where(eq(docs.id, id))
+      .returning();
+    return row;
   }
 }

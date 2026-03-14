@@ -1,45 +1,71 @@
 import {
-  IsDateString,
+  IsString,
   IsEnum,
   IsOptional,
-  IsString,
-  IsUUID,
   IsArray,
   ArrayUnique,
 } from 'class-validator';
-import { WorkItemStatus } from '@prisma/client';
+import { WorkItemStatus, workItemStatusValues } from 'src/common/drizzle/schema';
 
 export class WorkItemCreateDto {
   @IsString()
   title: string;
 
-  @IsUUID()
+  @IsString()
   workspaceId: string;
 
   @IsOptional()
   @IsString()
-  description?: string | null;
+  description?: string;
 
   @IsOptional()
-  @IsEnum(WorkItemStatus)
+  @IsEnum(workItemStatusValues)
   status?: WorkItemStatus;
 
   @IsOptional()
-  @IsUUID()
-  assignedToId?: string | null;
+  @IsString()
+  assignedToId?: string;
 
   @IsOptional()
-  @IsDateString()
-  dueDate?: Date | null;
+  @IsString()
+  dueDate?: string;
 
   @IsOptional()
   @IsArray()
+  @IsString({ each: true })
   @ArrayUnique()
-  @IsUUID(undefined, { each: true })
+  snippetIds?: string[];
+}
+
+export class WorkItemUpdateDto {
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsEnum(workItemStatusValues)
+  status?: WorkItemStatus;
+
+  @IsOptional()
+  @IsString()
+  assignedToId?: string;
+
+  @IsOptional()
+  @IsString()
+  dueDate?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @ArrayUnique()
   snippetIds?: string[];
 }
 
 export class WorkItemUpdateStatusDto {
-  @IsEnum(WorkItemStatus)
-  newStatus: WorkItemStatus;
+  @IsEnum(workItemStatusValues)
+  status: WorkItemStatus;
 }

@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { WorkspacesService } from './workspaces.service';
-import { PrismaService } from 'src/common/services/prisma.service';
 import { QstashService } from 'src/common/qstash/qstash.service';
 import { WorkspaceRepository } from './infrastructure/workspace.repository';
 import { WorkspaceImportRepository } from './infrastructure/workspace-import.repository';
@@ -13,7 +12,6 @@ describe('WorkspacesService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         WorkspacesService,
-        { provide: PrismaService, useValue: {} },
         { provide: QstashService, useValue: {} },
         { provide: WorkspaceRepository, useValue: {} },
         { provide: WorkspaceImportRepository, useValue: {} },

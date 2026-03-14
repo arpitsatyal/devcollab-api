@@ -2,7 +2,7 @@ import { Controller, Get, Post, Patch, Body, Param } from '@nestjs/common';
 import { SnippetsService } from './snippets.service';
 import { SnippetsCreateDto, SnippetsUpdateDto } from './dto/snippets.dto';
 import { CurrentUser } from 'src/modules/users/user.decorator';
-import { User } from '@prisma/client';
+import { User } from 'src/common/drizzle/schema';
 
 @Controller('workspaces/:workspaceId/snippets')
 // @UseGuards(AuthGuard)

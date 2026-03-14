@@ -14,7 +14,7 @@ import { RetrievalService } from './retrievalService';
 import { GenerationService } from './generationService';
 import { ToolService } from './toolService';
 import { LlmFactoryService } from '../llms/llmFactory';
-import { PrismaMessageStore } from '../adapters/prismaMessageStore';
+import { DrizzleMessageStore } from '../adapters/drizzleMessageStore';
 
 @Injectable()
 export class ChatEngineService {
@@ -24,7 +24,7 @@ export class ChatEngineService {
     private readonly generationService: GenerationService,
     private readonly toolService: ToolService,
     private readonly llmGateway: LlmFactoryService,
-    private readonly historyStore: PrismaMessageStore,
+    private readonly historyStore: DrizzleMessageStore,
     private readonly config: ChatEngineConfig,
   ) {}
 

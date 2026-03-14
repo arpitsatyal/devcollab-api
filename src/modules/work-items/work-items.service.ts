@@ -3,24 +3,26 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/common/services/prisma.service';
 import { QueueService } from 'src/modules/queue/queue.service';
 import {
   WorkItemCreateDto,
   WorkItemUpdateStatusDto,
 } from './dto/work-items.dto';
-import { Prisma, WorkItemStatus } from '@prisma/client';
 import dayjs from 'dayjs';
 import { QstashService } from 'src/common/qstash/qstash.service';
 import { WorkItemRepository } from './repositories/work-item.repository';
+import { WorkItemStatus } from 'src/common/drizzle/schema';
+import { DrizzleService } from 'src/common/drizzle/drizzle.service';
+import { users } from 'src/common/drizzle/schema';
+import { eq } from 'drizzle-orm';
 
 @Injectable()
 export class WorkItemsService {
   constructor(
-    private readonly prisma: PrismaService,
     private readonly queueService: QueueService,
     private readonly qstashService: QstashService,
     private readonly workItemRepo: WorkItemRepository,
+    private readonly drizzle: DrizzleService,
   ) {}
 
   async getWorkItems(workspaceId: string) {
@@ -28,9 +30,7 @@ export class WorkItemsService {
       throw new BadRequestException('Workspace ID is required');
     }
 
-    return this.workItemRepo.findMany({
-      where: { workspaceId },
-    });
+    return this.workItemRepo.findMany(workspaceId);
   }
 
   async getWorkItem(workItemId: string) {
@@ -40,36 +40,26 @@ export class WorkItemsService {
     return item;
   }
 
-  async update(id: string, data: Prisma.WorkItemUpdateInput) {
-    return this.workItemRepo.update({ where: { id }, data });
+  async update(id: string, data: any) {
+    return this.workItemRepo.update(id, data);
   }
 
   async createWorkItem(authorId: string, dto: WorkItemCreateDto) {
-    if (!dto.workspaceId) {
-      throw new BadRequestException('Workspace ID is required');
-    }
-
-    const workItem = await this.prisma.workItem.create({
-      data: {
-        title: dto.title,
-        description: dto.description,
-        dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
-        status: dto.status ?? WorkItemStatus.TODO,
-        workspaceId: dto.workspaceId,
-        assignedToId: dto.assignedToId,
-        authorId,
-        snippets: dto.snippetIds
-          ? {
-              connect: dto.snippetIds.map((id) => ({ id })),
-            }
-          : undefined,
-      },
+    const workItem = await this.workItemRepo.create({
+      title: dto.title,
+      description: dto.description,
+      dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
+      status: (dto.status as WorkItemStatus) ?? 'TODO',
+      workspaceId: dto.workspaceId,
+      assignedToId: dto.assignedToId,
+      authorId,
+      snippetIds: dto.snippetIds,
     });
 
     // Notify assignee if present
     if (workItem.assignedToId) {
-      const assignee = await this.prisma.user.findUnique({
-        where: { id: workItem.assignedToId },
+      const assignee = await this.drizzle.db.query.users.findFirst({
+        where: eq(users.id, workItem.assignedToId),
       });
 
       if (assignee?.email) {
@@ -78,7 +68,7 @@ export class WorkItemsService {
           assigneeName: assignee.name ?? 'Team Member',
           workspaceId: workItem.workspaceId,
           workItemTitle: workItem.title,
-          workItemDescription: workItem.description,
+          workItemDescription: workItem.description ?? '',
           dueDate: workItem.dueDate
             ? dayjs(workItem.dueDate).format('MMMM D, YYYY')
             : null,
@@ -92,18 +82,13 @@ export class WorkItemsService {
   }
 
   async updateStatus(workItemId: string, dto: WorkItemUpdateStatusDto) {
-    if (!dto.newStatus) {
-      throw new BadRequestException('newStatus is required');
-    }
-
-    const updatedWorkItem = await this.workItemRepo.update({
-      where: { id: workItemId },
-      data: { status: dto.newStatus },
+    const updatedWorkItem = await this.workItemRepo.update(workItemId, {
+      status: dto.status as WorkItemStatus,
     });
 
     if (updatedWorkItem.assignedToId) {
-      const assignee = await this.prisma.user.findUnique({
-        where: { id: updatedWorkItem.assignedToId },
+      const assignee = await this.drizzle.db.query.users.findFirst({
+        where: eq(users.id, updatedWorkItem.assignedToId),
       });
 
       if (assignee?.email) {
@@ -126,25 +111,6 @@ export class WorkItemsService {
     const now = dayjs();
     const thresholdDate = now.add(thresholdDays, 'day');
 
-    return this.workItemRepo.findMany({
-      where: {
-        dueDate: {
-          gte: now.toDate(),
-          lte: thresholdDate.toDate(),
-        },
-      },
-      select: {
-        id: true,
-        title: true,
-        dueDate: true,
-        workspaceId: true,
-        assignedTo: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-      },
-    });
+    return this.workItemRepo.findDueSoon(now.toDate(), thresholdDate.toDate());
   }
 }

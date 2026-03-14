@@ -1,7 +1,7 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CurrentUser } from './user.decorator';
-import { User } from '@prisma/client';
+import { User } from 'src/common/drizzle/schema';
 
 @Controller('users')
 // @UseGuards(SessionAuthGuard)

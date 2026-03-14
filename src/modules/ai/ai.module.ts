@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AiService } from './services/ai.service';
 import { AiController } from './controllers/ai.controller';
-import { PrismaService } from 'src/common/services/prisma.service';
 import { ChatEngineService } from './engine/services/chatEngine.service';
 import { SuggestionService } from './engine/services/suggestionService';
 import { GenerationService } from './engine/services/generationService';
@@ -13,7 +12,7 @@ import { TogetherLlmService } from './engine/llms/togetherLLM';
 import { GroqLlmService } from './engine/llms/groqLLM';
 import { VectorStoreService } from './engine/pinecone/vectorStore';
 import { ChatEngineConfig } from './engine/contracts/ports';
-import { PrismaMessageStore } from './engine/adapters/prismaMessageStore';
+import { DrizzleMessageStore } from './engine/adapters/drizzleMessageStore';
 import { MessageModule } from '../message/message.module';
 import { WorkItemsModule } from '../work-items/work-items.module';
 import { ChatHistoryRepository } from './engine/repositories/chat-history.repository';
@@ -36,12 +35,11 @@ import { WorkItemRepository } from '../work-items/repositories/work-item.reposit
     GroqLlmService,
     VectorStoreService,
     ChatEngineConfig,
-    PrismaMessageStore,
+    DrizzleMessageStore,
     ChatHistoryRepository,
     SnippetRepository,
     DocRepository,
     WorkItemRepository,
-    PrismaService,
   ],
   controllers: [AiController],
 })

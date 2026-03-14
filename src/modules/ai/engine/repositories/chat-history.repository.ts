@@ -1,16 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/common/services/prisma.service';
+import { eq, asc } from 'drizzle-orm';
+import { DrizzleService } from 'src/common/drizzle/drizzle.service';
+import { messages } from 'src/common/drizzle/schema';
 
 @Injectable()
 export class ChatHistoryRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly drizzle: DrizzleService) {}
 
   async getRecentHistory(chatId: string, limit: number): Promise<string> {
-    const pastMessages = await this.prisma.message.findMany({
-      where: { chatId },
-      orderBy: { createdAt: 'asc' },
-      take: limit,
-    });
+    const pastMessages = await this.drizzle.db
+      .select()
+      .from(messages)
+      .where(eq(messages.chatId, chatId))
+      .orderBy(asc(messages.createdAt))
+      .limit(limit);
+
     return pastMessages
       .map((m) => (m.isUser ? `User: ${m.content}` : `AI: ${m.content}`))
       .join('\n');

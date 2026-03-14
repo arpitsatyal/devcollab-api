@@ -13,7 +13,7 @@ import {
   WorkItemUpdateStatusDto,
 } from './dto/work-items.dto';
 import { CurrentUser } from 'src/modules/users/user.decorator';
-import { User } from '@prisma/client';
+import { User } from 'src/common/drizzle/schema';
 
 @Controller('work-items')
 // @UseGuards(SessionAuthGuard)

@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Pinecone } from '@pinecone-database/pinecone';
 import { PineconeInferenceEmbeddings } from 'src/modules/ai/engine/pinecone/pinecone-embeddings';
-import prisma from 'src/common/prisma/client';
+import { DrizzleService } from 'src/common/drizzle/drizzle.service';
+import { workspaces, workItems, snippets, docs } from 'src/common/drizzle/schema';
+import { eq } from 'drizzle-orm';
 
 export type SyncType = 'workspace' | 'workItem' | 'snippet' | 'doc';
 
@@ -13,6 +15,8 @@ export class PineconeService {
   });
   private readonly indexName = process.env.PINECONE_INDEX!;
   private readonly embeddings = new PineconeInferenceEmbeddings();
+
+  constructor(private readonly drizzle: DrizzleService) {}
 
   async syncToVectorStore(
     type: SyncType,
@@ -38,24 +42,26 @@ export class PineconeService {
     try {
       switch (type) {
         case 'workspace':
-          data = await prisma.workspace.findUnique({ where: { id } });
+          data = await this.drizzle.db.query.workspaces.findFirst({
+            where: eq(workspaces.id, id),
+          });
           break;
         case 'workItem':
-          data = await prisma.workItem.findUnique({
-            where: { id },
-            include: { workspace: true },
+          data = await this.drizzle.db.query.workItems.findFirst({
+            where: eq(workItems.id, id),
+            with: { workspace: true },
           });
           break;
         case 'snippet':
-          data = await prisma.snippet.findUnique({
-            where: { id },
-            include: { workspace: true },
+          data = await this.drizzle.db.query.snippets.findFirst({
+            where: eq(snippets.id, id),
+            with: { workspace: true },
           });
           break;
         case 'doc':
-          data = await prisma.doc.findUnique({
-            where: { id },
-            include: { workspace: true },
+          data = await this.drizzle.db.query.docs.findFirst({
+            where: eq(docs.id, id),
+            with: { workspace: true },
           });
           break;
       }

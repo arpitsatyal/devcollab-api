@@ -1,42 +1,84 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/common/services/prisma.service';
-import { Prisma, Workspace } from '@prisma/client';
+import { eq, and, sql } from 'drizzle-orm';
+import { DrizzleService } from 'src/common/drizzle/drizzle.service';
+import { workspaces, userPinnedWorkspaces } from 'src/common/drizzle/schema';
+import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class WorkspaceRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly drizzle: DrizzleService) {}
 
   findById(id: string) {
-    return this.prisma.workspace.findUnique({ where: { id } });
-  }
-
-  findManyRaw(query: any) {
-    return this.prisma.$queryRaw<Workspace[]>(query);
-  }
-
-  create(data: Prisma.WorkspaceCreateInput) {
-    return this.prisma.workspace.create({ data });
-  }
-
-  upsertPin(userId: string, workspaceId: string) {
-    return this.prisma.userPinnedWorkspace.upsert({
-      where: { userId_workspaceId: { userId, workspaceId } },
-      update: {},
-      create: { userId, workspaceId },
+    return this.drizzle.db.query.workspaces.findFirst({
+      where: eq(workspaces.id, id),
     });
   }
 
-  deletePin(userId: string, workspaceId: string) {
-    return this.prisma.userPinnedWorkspace.deleteMany({
-      where: { userId, workspaceId },
+  findManyRaw(userId: string, skip = 0, take = 20) {
+    return this.drizzle.db.execute(
+      sql`
+        SELECT w.*,
+              (uww."userId" IS NOT NULL) AS "isPinned"
+        FROM "Workspace" w
+        LEFT JOIN "UserPinnedWorkspace" uww
+          ON uww."userId" = ${userId}
+          AND uww."workspaceId" = w."id"
+        ORDER BY "isPinned" DESC, w."createdAt" DESC
+        OFFSET ${skip}
+        LIMIT ${take}
+      `,
+    );
+  }
+
+  async create(data: { title: string; description?: string | null; ownerId: string }) {
+    const now = new Date();
+    const [row] = await this.drizzle.db
+      .insert(workspaces)
+      .values({ id: uuid(), ...data, createdAt: now, updatedAt: now })
+      .returning();
+    return row;
+  }
+
+  async upsertPin(userId: string, workspaceId: string) {
+    // Check if pin exists
+    const existing = await this.drizzle.db.query.userPinnedWorkspaces.findFirst({
+      where: and(
+        eq(userPinnedWorkspaces.userId, userId),
+        eq(userPinnedWorkspaces.workspaceId, workspaceId),
+      ),
     });
+    if (!existing) {
+      await this.drizzle.db
+        .insert(userPinnedWorkspaces)
+        .values({ id: uuid(), userId, workspaceId });
+    }
   }
 
-  update(args: Prisma.WorkspaceUpdateArgs) {
-    return this.prisma.workspace.update(args);
+  async deletePin(userId: string, workspaceId: string) {
+    await this.drizzle.db
+      .delete(userPinnedWorkspaces)
+      .where(
+        and(
+          eq(userPinnedWorkspaces.userId, userId),
+          eq(userPinnedWorkspaces.workspaceId, workspaceId),
+        ),
+      );
   }
 
-  delete(args: Prisma.WorkspaceDeleteArgs) {
-    return this.prisma.workspace.delete(args);
+  async update(id: string, data: Partial<{ title: string; description: string; isPublic: boolean }>) {
+    const [row] = await this.drizzle.db
+      .update(workspaces)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(workspaces.id, id))
+      .returning();
+    return row;
+  }
+
+  async delete(id: string) {
+    const [row] = await this.drizzle.db
+      .delete(workspaces)
+      .where(eq(workspaces.id, id))
+      .returning();
+    return row;
   }
 }

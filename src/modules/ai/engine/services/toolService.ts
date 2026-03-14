@@ -62,11 +62,7 @@ export class ToolService implements ToolRegistry {
   }: {
     workspaceId: string;
   }): Promise<string> {
-    const snippets = await this.snippetRepo.findMany({
-      where: { workspaceId },
-      take: 5,
-      select: { title: true, language: true, content: true },
-    });
+    const snippets = await this.snippetRepo.findMany(workspaceId, 5);
     if (snippets.length === 0) return 'No snippets found.';
     return JSON.stringify(snippets);
   }
@@ -76,11 +72,7 @@ export class ToolService implements ToolRegistry {
   }: {
     workspaceId: string;
   }): Promise<string> {
-    const docs = await this.docRepo.findMany({
-      where: { workspaceId },
-      take: 5,
-      select: { label: true, content: true },
-    });
+    const docs = await this.docRepo.findMany(workspaceId, 5);
     if (docs.length === 0) return 'No docs found.';
     return JSON.stringify(
       docs.map((d) => ({
@@ -98,11 +90,7 @@ export class ToolService implements ToolRegistry {
   }: {
     workspaceId: string;
   }): Promise<string> {
-    const workItems = await this.workItemRepo.findMany({
-      where: { workspaceId },
-      take: 5,
-      select: { title: true, status: true, description: true },
-    });
+    const workItems = await this.workItemRepo.findMany(workspaceId, 5);
     if (workItems.length === 0) return 'No work items found.';
     return JSON.stringify(workItems);
   }
@@ -114,38 +102,11 @@ export class ToolService implements ToolRegistry {
     query: string;
     workspaceId: string;
   }): Promise<string> {
-    const snippets = await this.snippetRepo.findMany({
-      where: {
-        workspaceId,
-        OR: [
-          { title: { contains: query, mode: 'insensitive' } },
-          { content: { contains: query, mode: 'insensitive' } },
-        ],
-      },
-      take: 3,
-      select: { title: true, language: true, content: true },
-    });
+    const snippets = await this.snippetRepo.findManyBySearch(workspaceId, query, 3);
 
-    const workItems = await this.workItemRepo.findMany({
-      where: {
-        workspaceId,
-        OR: [
-          { title: { contains: query, mode: 'insensitive' } },
-          { description: { contains: query, mode: 'insensitive' } },
-        ],
-      },
-      take: 3,
-      select: { title: true, status: true, description: true },
-    });
+    const workItems = await this.workItemRepo.findManyBySearch(workspaceId, query, 3);
 
-    const docs = await this.docRepo.findMany({
-      where: {
-        workspaceId,
-        label: { contains: query, mode: 'insensitive' },
-      },
-      take: 3,
-      select: { label: true, content: true },
-    });
+    const docs = await this.docRepo.findManyByLabel(workspaceId, query, 3);
 
     return JSON.stringify({
       snippets,

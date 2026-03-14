@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Delete, Param } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { CurrentUser } from 'src/modules/users/user.decorator';
-import { User } from '@prisma/client';
+import { User } from 'src/common/drizzle/schema';
 
 @Controller('chats')
 // @UseGuards(AuthGuard)

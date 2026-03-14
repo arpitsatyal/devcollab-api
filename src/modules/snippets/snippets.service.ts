@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { SnippetsCreateDto, SnippetsUpdateDto } from './dto/snippets.dto';
-import { Prisma } from '@prisma/client';
 import { QstashService } from 'src/common/qstash/qstash.service';
 import { SnippetRepository } from './repositories/snippet.repository';
 
@@ -12,18 +11,14 @@ export class SnippetsService {
   ) {}
 
   async getSnippet(snippetId: string) {
-    const snippet = await this.snippetRepo.findUnique({
-      where: { id: snippetId },
-    });
+    const snippet = await this.snippetRepo.findUnique(snippetId);
     if (!snippet)
       throw new NotFoundException(`Snippet with id ${snippetId} not found`);
     return snippet;
   }
 
   async getSnippets(workspaceId: string) {
-    return this.snippetRepo.findMany({
-      where: { workspaceId },
-    });
+    return this.snippetRepo.findMany(workspaceId);
   }
 
   async createSnippet(
@@ -32,14 +27,12 @@ export class SnippetsService {
     dto: SnippetsCreateDto,
   ) {
     const snippet = await this.snippetRepo.create({
-      data: {
-        title: dto.title,
-        language: dto.language,
-        content: dto.content,
-        extension: dto.extension,
-        author: { connect: { id: authorId } },
-        workspace: { connect: { id: workspaceId } },
-      },
+      title: dto.title,
+      language: dto.language,
+      content: dto.content,
+      extension: dto.extension,
+      authorId,
+      workspaceId,
     });
 
     await this.qstashService.publishSyncEvent('snippet', snippet);
@@ -49,20 +42,16 @@ export class SnippetsService {
   async updateSnippet(snippetId: string, dto: SnippetsUpdateDto) {
     const { title, language, content, extension, lastEditedById } = dto;
 
-    const updateData: Prisma.SnippetUpdateInput = {
+    const updated = await this.snippetRepo.update(snippetId, {
       ...(title && { title }),
       ...(language && { language }),
       ...(content && { content }),
       ...(extension && { extension }),
-      ...(lastEditedById && {
-        lastEditedBy: { connect: { id: lastEditedById } },
-      }),
-    };
-
-    const updated = await this.snippetRepo.update({
-      where: { id: snippetId },
-      data: updateData,
+      ...(lastEditedById && { lastEditedById }),
+      updatedAt: new Date(),
     });
+
+    if (!updated) throw new NotFoundException('Snippet not found');
 
     await this.qstashService.publishSyncEvent('snippet', updated);
     return updated;

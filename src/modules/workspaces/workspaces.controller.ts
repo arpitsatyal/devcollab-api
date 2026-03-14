@@ -11,7 +11,7 @@ import { WorkspacesService } from './workspaces.service';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { CreateWorkspaceDto, ImportRepositoryDto } from './dto/workspaces.dto';
 import { CurrentUser } from 'src/modules/users/user.decorator';
-import { User } from '@prisma/client';
+import { User } from 'src/common/drizzle/schema';
 
 @Controller('workspaces')
 // @UseGuards(SessionAuthGuard)

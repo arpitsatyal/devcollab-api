@@ -14,6 +14,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { WebhooksModule } from './modules/webhooks/webhooks.module';
 import { PineconeModule } from './common/pinecone/pinecone.module';
 import { QstashModule } from './common/qstash/qstash.module';
+import { DrizzleModule } from './common/drizzle/drizzle.module';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 
 @Module({
@@ -32,6 +33,7 @@ import { LoggerMiddleware } from './common/middlewares/logger.middleware';
     WebhooksModule,
     PineconeModule,
     QstashModule,
+    DrizzleModule,
   ],
   controllers: [AppController],
   providers: [],

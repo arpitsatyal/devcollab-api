@@ -1,18 +1,18 @@
 import { Module } from '@nestjs/common';
-import { UsersService } from 'src/modules/users/users.service';
-import { PrismaService } from 'src/common/services/prisma.service';
 import { AuthController } from './auth.controller';
 import { GoogleStrategy } from './google.strategy';
 import { GithubStrategy } from './github.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { SessionSerializer } from './session.serializer.';
+import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [PassportModule.register({ session: true })],
+  imports: [
+    PassportModule.register({ session: true }),
+    UsersModule,
+  ],
   providers: [
     SessionSerializer,
-    PrismaService,
-    UsersService,
     GoogleStrategy,
     GithubStrategy,
   ],

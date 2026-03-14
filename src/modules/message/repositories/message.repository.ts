@@ -1,34 +1,50 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/common/services/prisma.service';
-import { Prisma } from '@prisma/client';
+import { eq, asc } from 'drizzle-orm';
+import { DrizzleService } from 'src/common/drizzle/drizzle.service';
+import { messages } from 'src/common/drizzle/schema';
+import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class MessageRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly drizzle: DrizzleService) {}
 
-  findUnique(args: { where: { id: string }; select?: any; include?: any }) {
-    return this.prisma.message.findUnique(args);
-  }
-
-  findMany(args: Prisma.MessageFindManyArgs) {
-    return this.prisma.message.findMany(args);
-  }
-
-  create(args: { data: { chatId: string; content: string; isUser: boolean } }) {
-    const { chatId, ...rest } = args.data;
-    return this.prisma.message.create({
-      data: {
-        ...rest,
-        chat: { connect: { id: chatId } },
-      },
+  findUnique(id: string) {
+    return this.drizzle.db.query.messages.findFirst({
+      where: eq(messages.id, id),
     });
   }
 
-  update(args: { where: { id: string }; data: Prisma.MessageUpdateInput }) {
-    return this.prisma.message.update(args);
+  findMany(chatId: string) {
+    return this.drizzle.db
+      .select()
+      .from(messages)
+      .where(eq(messages.chatId, chatId))
+      .orderBy(asc(messages.createdAt));
   }
 
-  delete(args: { where: { id: string } }) {
-    return this.prisma.message.delete(args);
+  async create(args: { data: { chatId: string; content: string; isUser: boolean } }) {
+    const { chatId, content, isUser } = args.data;
+    const [row] = await this.drizzle.db
+      .insert(messages)
+      .values({ id: uuid(), chatId, content, isUser })
+      .returning();
+    return row;
+  }
+
+  async update(args: { where: { id: string }; data: Partial<{ content: string; isUser: boolean }> }) {
+    const [row] = await this.drizzle.db
+      .update(messages)
+      .set(args.data)
+      .where(eq(messages.id, args.where.id))
+      .returning();
+    return row;
+  }
+
+  async delete(args: { where: { id: string } }) {
+    const [row] = await this.drizzle.db
+      .delete(messages)
+      .where(eq(messages.id, args.where.id))
+      .returning();
+    return row;
   }
 }

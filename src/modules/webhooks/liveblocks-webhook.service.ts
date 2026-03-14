@@ -7,8 +7,9 @@ import {
 import axios from 'axios';
 import { Liveblocks } from '@liveblocks/node';
 import { prepareTextMentionNotificationEmailAsReact } from '@liveblocks/emails';
-import { PrismaService } from 'src/common/services/prisma.service';
 import { QueueService } from 'src/modules/queue/queue.service';
+import { UserRepository } from '../users/repositories/user.repository';
+import { DocRepository } from '../docs/repositories/doc.repository';
 
 @Injectable()
 export class LiveblocksWebhookService {
@@ -18,8 +19,9 @@ export class LiveblocksWebhookService {
   });
 
   constructor(
-    private readonly prisma: PrismaService,
     private readonly queueService: QueueService,
+    private readonly userRepo: UserRepository,
+    private readonly docRepo: DocRepository,
   ) {}
 
   async handleWebhook(payload: any): Promise<{ message: string }> {
@@ -37,10 +39,7 @@ export class LiveblocksWebhookService {
   }
 
   private async handleTextMentionNotification(data: any, payload: any) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: data.userId },
-      select: { email: true },
-    });
+    const user = await this.userRepo.findById(data.userId);
 
     if (!user?.email) {
       this.logger.warn(`No email found for userId: ${data.userId}`);
@@ -54,9 +53,7 @@ export class LiveblocksWebhookService {
         payload,
         {
           resolveUsers: async ({ userIds }) => {
-            const usersData = await this.prisma.user.findMany({
-              where: { id: { in: userIds } },
-            });
+            const usersData = await this.userRepo.findManyByIds(userIds);
 
             const userMap = new Map(usersData.map((u) => [u.id, u]));
             return userIds
@@ -83,23 +80,17 @@ export class LiveblocksWebhookService {
     }
 
     const { mention } = emailData;
-    const [author, docs] = await Promise.all([
-      this.prisma.user.findUnique({
-        where: { id: mention.author.id },
-        select: { name: true },
-      }),
-      this.prisma.doc.findFirst({
-        where: { roomId: mention.roomId },
-        select: { label: true, workspaceId: true, id: true },
-      }),
+    const [author, doc] = await Promise.all([
+      this.userRepo.findById(mention.author.id),
+      this.docRepo.findByRoomId(mention.roomId),
     ]);
 
     try {
       await this.queueService.sendMessage({
         assigneeEmail: user.email,
         content: mention.content,
-        mentionUrl: `https://www.devcollab.store/workspaces/${docs?.workspaceId}/docs?docId=${docs?.id}`,
-        label: docs?.label,
+        mentionUrl: `https://www.devcollab.store/workspaces/${doc?.workspaceId}/docs?docId=${doc?.id}`,
+        label: doc?.label,
         authorName: author?.name,
       });
     } catch (error) {
@@ -131,10 +122,7 @@ export class LiveblocksWebhookService {
         return { message: 'No document content to save.' };
       }
 
-      await this.prisma.doc.update({
-        where: { roomId: data.roomId },
-        data: { content },
-      });
+      await this.docRepo.updateByRoomId(data.roomId, { content });
 
       return { message: 'Document content updated successfully.' };
     } catch (error) {

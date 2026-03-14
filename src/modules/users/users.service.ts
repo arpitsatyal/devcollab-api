@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { User } from '@prisma/client';
-import { PrismaService } from 'src/common/services/prisma.service';
+import { eq, count, inArray } from 'drizzle-orm';
 import { UserRepository } from './repositories/user.repository';
+import { DrizzleService } from 'src/common/drizzle/drizzle.service';
+import { workspaces, snippets, docs, users, workItems } from 'src/common/drizzle/schema';
 
 interface CreateUserDTO {
   email: string;
@@ -13,60 +14,77 @@ interface CreateUserDTO {
 @Injectable()
 export class UsersService {
   constructor(
-    private prismaService: PrismaService,
     private readonly userRepo: UserRepository,
+    private readonly drizzle: DrizzleService,
   ) {}
 
-  async findByEmail(email: string): Promise<User | null> {
-    const user = await this.userRepo.findUnique({
-      where: { email },
-    });
-
-    return user;
+  async findByEmail(email: string) {
+    return this.userRepo.findByEmail(email);
   }
 
-  async findById(id: string): Promise<User | null> {
-    const user = await this.userRepo.findUnique({
-      where: { id },
-    });
+  async findById(id: string) {
+    const user = await this.userRepo.findById(id);
     if (!user) throw new NotFoundException(`No user found with id: ${id}`);
     return user;
   }
 
-  async findAll(): Promise<User[]> {
-    return await this.userRepo.findMany();
+  async findAll() {
+    return this.userRepo.findMany();
   }
 
   async searchByName(text: string): Promise<string[]> {
     const decodedText = decodeURIComponent(text).trim().toLowerCase();
-    const users = await this.userRepo.findMany();
-
-    return users
-      .filter(
-        (user) => user.name && user.name.toLowerCase().includes(decodedText),
-      )
+    const allUsers = await this.userRepo.findMany();
+    return allUsers
+      .filter((user) => user.name && user.name.toLowerCase().includes(decodedText))
       .map((user) => user.id);
   }
 
   async getStatsByEmail(email: string) {
-    const user = await this.userRepo.findUnique({
-      where: { email },
-      select: { id: true },
-    });
-
+    const user = await this.userRepo.findByEmail(email);
     if (!user) throw new NotFoundException('User not found');
 
-    const [workspacesCount, snippetsCount, docsCount, workItemsCount] =
-      await Promise.all([
-        this.prismaService.workspace.count({ where: { ownerId: user.id } }),
-        this.prismaService.snippet.count({ where: { authorId: user.id } }),
-        this.prismaService.doc.count({
-          where: { workspace: { ownerId: user.id } },
-        }),
-        this.prismaService.workItem.count({
-          where: { workspace: { ownerId: user.id } },
-        }),
-      ]);
+    // Get all workspace IDs owned by this user
+    const userWorkspaces = await this.drizzle.db
+      .select({ id: workspaces.id })
+      .from(workspaces)
+      .where(eq(workspaces.ownerId, user.id));
+
+    const workspaceIds = userWorkspaces.map((w) => w.id);
+
+    const [workspacesCount, snippetsCount, docsCount, workItemsCount] = await Promise.all([
+      // Count owned workspaces
+      this.drizzle.db
+        .select({ value: count() })
+        .from(workspaces)
+        .where(eq(workspaces.ownerId, user.id))
+        .then((r) => r[0].value),
+
+      // Count snippets authored
+      this.drizzle.db
+        .select({ value: count() })
+        .from(snippets)
+        .where(eq(snippets.authorId, user.id))
+        .then((r) => r[0].value),
+
+      // Count docs in user's workspaces
+      workspaceIds.length > 0
+        ? this.drizzle.db
+            .select({ value: count() })
+            .from(docs)
+            .where(inArray(docs.workspaceId, workspaceIds))
+            .then((r) => r[0].value)
+        : Promise.resolve(0),
+
+      // Count workItems in user's workspaces
+      workspaceIds.length > 0
+        ? this.drizzle.db
+            .select({ value: count() })
+            .from(workItems)
+            .where(inArray(workItems.workspaceId, workspaceIds))
+            .then((r) => r[0].value)
+        : Promise.resolve(0),
+    ]);
 
     return {
       workspaces: workspacesCount,
@@ -77,17 +95,9 @@ export class UsersService {
   }
 
   async getLiveblocksUsers(userIds: string[]) {
-    const users = await this.prismaService.user.findMany({
-      where: { id: { in: userIds } },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-      },
-    });
+    const found = await this.userRepo.findManyByIds(userIds);
 
-    const userMap = new Map(users.map((u) => [u.id, u]));
+    const userMap = new Map(found.map((u) => [u.id, u]));
     return userIds
       .map((id) => userMap.get(id))
       .filter(Boolean)
@@ -102,12 +112,10 @@ export class UsersService {
 
   async createUser(createUserDTO: CreateUserDTO) {
     return this.userRepo.create({
-      data: {
-        email: createUserDTO.email,
-        name: createUserDTO.name,
-        provider: createUserDTO.provider,
-        image: createUserDTO.image,
-      },
+      email: createUserDTO.email,
+      name: createUserDTO.name,
+      provider: createUserDTO.provider,
+      image: createUserDTO.image,
     });
   }
 }

@@ -1,28 +1,65 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/common/services/prisma.service';
-import { Prisma } from '@prisma/client';
+import { eq, inArray } from 'drizzle-orm';
+import { DrizzleService } from 'src/common/drizzle/drizzle.service';
+import { users } from 'src/common/drizzle/schema';
+import { v4 as uuid } from 'uuid';
+
+type Provider = 'GOOGLE' | 'GITHUB' | 'LOCAL';
 
 @Injectable()
 export class UserRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly drizzle: DrizzleService) {}
 
-  findUnique(args: Prisma.UserFindUniqueArgs) {
-    return this.prisma.user.findUnique(args);
+  findByEmail(email: string) {
+    return this.drizzle.db.query.users.findFirst({
+      where: eq(users.email, email),
+    });
   }
 
-  findMany(args?: Prisma.UserFindManyArgs) {
-    return this.prisma.user.findMany(args);
+  findById(id: string) {
+    return this.drizzle.db.query.users.findFirst({
+      where: eq(users.id, id),
+    });
   }
 
-  create(args: Prisma.UserCreateArgs) {
-    return this.prisma.user.create(args);
+  findMany() {
+    return this.drizzle.db.select().from(users);
   }
 
-  update(args: Prisma.UserUpdateArgs) {
-    return this.prisma.user.update(args);
+  findManyByIds(ids: string[]) {
+    return this.drizzle.db
+      .select()
+      .from(users)
+      .where(inArray(users.id, ids));
   }
 
-  delete(args: Prisma.UserDeleteArgs) {
-    return this.prisma.user.delete(args);
+  async create(data: {
+    email: string;
+    name: string;
+    provider: Provider;
+    image?: string;
+  }) {
+    const [row] = await this.drizzle.db
+      .insert(users)
+      .values({ id: uuid(), ...data })
+      .returning();
+    return row;
+  }
+
+  async update(id: string, data: Partial<{ name: string; email: string; image: string }>) {
+    const [row] = await this.drizzle.db
+      .update(users)
+      .set(data)
+      .where(eq(users.id, id))
+      .returning();
+    return row;
+  }
+
+  async delete(id: string) {
+    const [row] = await this.drizzle.db
+      .delete(users)
+      .where(eq(users.id, id))
+      .returning();
+    return row;
   }
 }

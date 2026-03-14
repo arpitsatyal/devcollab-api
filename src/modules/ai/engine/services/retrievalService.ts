@@ -2,16 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { Document } from '@langchain/core/documents';
-import { PrismaService } from 'src/common/services/prisma.service';
+import { DrizzleService } from 'src/common/drizzle/drizzle.service';
 import { VectorStoreService } from '../pinecone/vectorStore';
 import { RetrievalPort, SearchHit, SearchDocument } from '../contracts/ports';
+import { workspaces, workItems, snippets, docs } from 'src/common/drizzle/schema';
+import { eq, or, ilike, and } from 'drizzle-orm';
 
 @Injectable()
 export class RetrievalService implements RetrievalPort {
   private readonly scoreThreshold = 0.5;
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly vectorStoreService: VectorStoreService,
   ) {}
 
@@ -48,17 +50,16 @@ export class RetrievalService implements RetrievalPort {
 
     try {
       if (!workspaceId) {
-        const workspaces = await this.prisma.workspace.findMany({
-          where: {
-            OR: [
-              { title: { contains: query, mode: 'insensitive' } },
-              { description: { contains: query, mode: 'insensitive' } },
-            ],
-          },
-          take: 3,
+        const foundWorkspaces = await this.drizzle.db.query.workspaces.findMany({
+          where: or(
+            ilike(workspaces.title, `%${query}%`),
+            ilike(workspaces.description, `%${query}%`),
+          ),
+          limit: 3,
         });
+
         results.push(
-          ...workspaces.map((w) => ({
+          ...foundWorkspaces.map((w) => ({
             pageContent: `Workspace Title: ${w.title}\nDescription: ${w.description || 'No description'}`,
             metadata: {
               type: 'workspace',
@@ -70,19 +71,20 @@ export class RetrievalService implements RetrievalPort {
       }
 
       if (workspaceId) {
-        const workItems = await this.prisma.workItem.findMany({
-          where: {
-            workspaceId,
-            OR: [
-              { title: { contains: query, mode: 'insensitive' } },
-              { description: { contains: query, mode: 'insensitive' } },
-            ],
-          },
-          take: 3,
-          include: { workspace: true },
+        const foundWorkItems = await this.drizzle.db.query.workItems.findMany({
+          where: and(
+            eq(workItems.workspaceId, workspaceId),
+            or(
+              ilike(workItems.title, `%${query}%`),
+              ilike(workItems.description, `%${query}%`),
+            ),
+          ),
+          limit: 3,
+          with: { workspace: true },
         });
+
         results.push(
-          ...workItems.map((w) => ({
+          ...foundWorkItems.map((w) => ({
             pageContent: `Work Item Title: ${w.title}\nStatus: ${w.status}\nDescription: ${w.description || 'No description'}`,
             metadata: {
               type: 'workItem',
@@ -92,19 +94,20 @@ export class RetrievalService implements RetrievalPort {
           })),
         );
 
-        const snippets = await this.prisma.snippet.findMany({
-          where: {
-            workspaceId,
-            OR: [
-              { title: { contains: query, mode: 'insensitive' } },
-              { content: { contains: query, mode: 'insensitive' } },
-            ],
-          },
-          take: 3,
-          include: { workspace: true },
+        const foundSnippets = await this.drizzle.db.query.snippets.findMany({
+          where: and(
+            eq(snippets.workspaceId, workspaceId),
+            or(
+              ilike(snippets.title, `%${query}%`),
+              ilike(snippets.content, `%${query}%`),
+            ),
+          ),
+          limit: 3,
+          with: { workspace: true },
         });
+
         results.push(
-          ...snippets.map((s) => ({
+          ...foundSnippets.map((s) => ({
             pageContent: `Snippet Title: ${s.title}\nLanguage: ${s.language}\nContent:\n${s.content}`,
             metadata: {
               type: 'snippet',
@@ -114,16 +117,17 @@ export class RetrievalService implements RetrievalPort {
           })),
         );
 
-        const docs = await this.prisma.doc.findMany({
-          where: {
-            workspaceId,
-            label: { contains: query, mode: 'insensitive' },
-          },
-          take: 3,
-          include: { workspace: true },
+        const foundDocs = await this.drizzle.db.query.docs.findMany({
+          where: and(
+            eq(docs.workspaceId, workspaceId),
+            ilike(docs.label, `%${query}%`),
+          ),
+          limit: 3,
+          with: { workspace: true },
         });
+
         results.push(
-          ...docs.map((d) => {
+          ...foundDocs.map((d) => {
             const contentStr =
               typeof d.content === 'string'
                 ? d.content

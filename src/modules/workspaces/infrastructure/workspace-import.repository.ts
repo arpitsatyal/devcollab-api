@@ -1,18 +1,39 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/common/services/prisma.service';
-import { Prisma } from '@prisma/client';
+import { DrizzleService } from 'src/common/drizzle/drizzle.service';
+import { snippets, docs } from 'src/common/drizzle/schema';
+import { v4 as uuid } from 'uuid';
+
+type SnippetInsert = {
+  title: string;
+  language: string;
+  extension: string;
+  content: string;
+  workspaceId: string;
+  authorId?: string;
+};
+
+type DocInsert = {
+  label: string;
+  workspaceId: string;
+  roomId: string;
+  content?: unknown;
+};
 
 @Injectable()
 export class WorkspaceImportRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly drizzle: DrizzleService) {}
 
-  createSnippets(data: Prisma.SnippetCreateManyInput[]) {
-    if (data.length === 0) return Promise.resolve();
-    return this.prisma.snippet.createMany({ data });
+  async createSnippets(data: SnippetInsert[]) {
+    if (data.length === 0) return;
+    await this.drizzle.db
+      .insert(snippets)
+      .values(data.map((s) => ({ id: uuid(), ...s })));
   }
 
-  createDocs(data: Prisma.DocCreateManyInput[]) {
-    if (data.length === 0) return Promise.resolve();
-    return this.prisma.doc.createMany({ data });
+  async createDocs(data: DocInsert[]) {
+    if (data.length === 0) return;
+    await this.drizzle.db
+      .insert(docs)
+      .values(data.map((d) => ({ id: uuid(), ...d })));
   }
 }

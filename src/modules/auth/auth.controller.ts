@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser } from '../users/user.decorator';
-import { User } from '@prisma/client';
+import { User } from 'src/common/drizzle/schema';
 import { SessionAuthGuard } from 'src/common/guards/auth.guard';
 import { AuthenticatedRequest } from 'src/common/interfaces/AuthenticatedRequest';
 import { Response } from 'express';
