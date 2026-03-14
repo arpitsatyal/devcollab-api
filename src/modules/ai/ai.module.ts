@@ -7,12 +7,6 @@ import { GenerationService } from './services/generationService';
 import { PromptService } from './services/promptService';
 import { RetrievalService } from './services/retrievalService';
 import { ToolService } from './services/toolService';
-import { LlmFactoryService } from './llms/llmFactory';
-import { TogetherLlmService } from './llms/togetherLLM';
-import { GroqLlmService } from './llms/groqLLM';
-import { VectorStoreService } from './pinecone/vectorStore';
-import { ChatEngineConfig } from './contracts/ports';
-import { MessageHistoryService } from './services/messageHistoryService';
 import { MessageModule } from '../message/message.module';
 import { WorkItemsModule } from '../work-items/work-items.module';
 import { ChatHistoryRepository } from './repositories/chat-history.repository';
@@ -20,9 +14,13 @@ import { SnippetRepository } from '../snippets/repositories/snippet.repository';
 import { DocRepository } from '../docs/repositories/doc.repository';
 import { WorkItemRepository } from '../work-items/repositories/work-item.repository';
 import { LangGraphService } from './services/lang-graph.service';
+import { LlmModule } from './llms/llm.module';
+import { VectorModule } from './pinecone/vector.module';
+import { ChatEngineConfig } from './contracts/ports';
+import { MessageHistoryService } from './services/messageHistoryService';
 
 @Module({
-  imports: [MessageModule, WorkItemsModule],
+  imports: [MessageModule, WorkItemsModule, LlmModule, VectorModule],
   providers: [
     AiService,
     ChatEngineService,
@@ -31,10 +29,6 @@ import { LangGraphService } from './services/lang-graph.service';
     PromptService,
     RetrievalService,
     ToolService,
-    LlmFactoryService,
-    TogetherLlmService,
-    GroqLlmService,
-    VectorStoreService,
     ChatEngineConfig,
     MessageHistoryService,
     ChatHistoryRepository,
