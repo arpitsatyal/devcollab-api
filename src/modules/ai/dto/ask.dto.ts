@@ -8,12 +8,4 @@ export class AskDto {
   @IsString()
   @MaxLength(4000)
   question: string;
-
-  @IsOptional()
-  @IsUUID()
-  workspaceId?: string;
-
-  @IsOptional()
-  @IsUUID()
-  projectId?: string;
 }

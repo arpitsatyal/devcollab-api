@@ -44,13 +44,17 @@ export class WorkItemsService {
     return this.workItemRepo.update(id, data);
   }
 
-  async createWorkItem(authorId: string, dto: WorkItemCreateDto) {
+  async createWorkItem(
+    workspaceId: string,
+    authorId: string,
+    dto: WorkItemCreateDto,
+  ) {
     const workItem = await this.workItemRepo.create({
       title: dto.title,
       description: dto.description,
       dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
       status: (dto.status as WorkItemStatus) ?? 'TODO',
-      workspaceId: dto.workspaceId,
+      workspaceId,
       assignedToId: dto.assignedToId,
       authorId,
       snippetIds: dto.snippetIds,

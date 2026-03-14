@@ -49,7 +49,7 @@ export class ToolService implements ToolRegistry {
     } as any);
 
     this.existingWorkItemsTool = new DynamicStructuredTool({
-      name: 'getExistingTasks',
+      name: 'getWorkItems',
       description:
         'Fetch ALL work items and their status (TODO/IN_PROGRESS/DONE). Provide title only if you know the exact work item title; otherwise omit it to list everything.',
       schema: z.object({
@@ -153,8 +153,8 @@ export class ToolService implements ToolRegistry {
 
     if (workItems.length === 0) {
       return title
-        ? `No tasks found matching the title: '${title}'.`
-        : 'No tasks have been created yet.';
+        ? `No work items found matching the title: '${title}'.`
+        : 'No work items have been created yet.';
     }
 
     const output = workItems.map((w: any) => ({
@@ -162,7 +162,7 @@ export class ToolService implements ToolRegistry {
       description: w.description || '',
       status: w.status,
     }));
-    return `Found exactly ${workItems.length} task(s) total in the workspace.\n${JSON.stringify(output)}`;
+    return `Found exactly ${workItems.length} work item(s) total in the workspace.\n${JSON.stringify(output)}`;
   }
 
   private async handleSemanticSearch(

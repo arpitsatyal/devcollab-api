@@ -11,9 +11,6 @@ export class WorkItemCreateDto {
   @IsString()
   title: string;
 
-  @IsString()
-  workspaceId: string;
-
   @IsOptional()
   @IsString()
   description?: string;

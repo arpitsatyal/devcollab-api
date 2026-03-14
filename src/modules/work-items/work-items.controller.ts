@@ -20,7 +20,7 @@ import type { User } from '../../common/drizzle/schema';
 @Controller('work-items')
 @UseGuards(SessionAuthGuard)
 export class WorkItemsController {
-  constructor(private readonly workItemsService: WorkItemsService) {}
+  constructor(private readonly workItemsService: WorkItemsService) { }
 
   @Get()
   getWorkItems(@Query('workspaceId') workspaceId: string) {
@@ -39,9 +39,13 @@ export class WorkItemsController {
   }
 
   @Post()
-  createWorkItem(@Body() body: WorkItemCreateDto, @CurrentUser() user: User) {
+  createWorkItem(
+    @Query('workspaceId') workspaceId: string,
+    @Body() body: WorkItemCreateDto,
+    @CurrentUser() user: User,
+  ) {
     const authorId = user.id;
-    return this.workItemsService.createWorkItem(authorId, body);
+    return this.workItemsService.createWorkItem(workspaceId, authorId, body);
   }
 
   @Patch(':workItemId/status')
