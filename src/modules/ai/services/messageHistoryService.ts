@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { MessageHistoryPort } from '../contracts/ports';
+import { MessageHistoryPort } from '../interfaces/history.port';
 import { ChatHistoryRepository } from '../repositories/chat-history.repository';
 
 @Injectable()

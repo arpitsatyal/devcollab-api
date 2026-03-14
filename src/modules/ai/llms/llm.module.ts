@@ -3,8 +3,14 @@ import { LlmFactoryService } from './llmFactory';
 import { GroqLlmService } from './groqLLM';
 import { TogetherLlmService } from './togetherLLM';
 
+import { LlmGateway } from '../interfaces/llm.port';
+
 @Module({
-  providers: [LlmFactoryService, GroqLlmService, TogetherLlmService],
-  exports: [LlmFactoryService],
+  providers: [
+    { provide: LlmGateway, useClass: LlmFactoryService },
+    GroqLlmService,
+    TogetherLlmService,
+  ],
+  exports: [LlmGateway],
 })
 export class LlmModule {}

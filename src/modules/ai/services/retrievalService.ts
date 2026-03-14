@@ -4,7 +4,7 @@ import { StringOutputParser } from '@langchain/core/output_parsers';
 import { Document } from '@langchain/core/documents';
 import { DrizzleService } from 'src/common/drizzle/drizzle.service';
 import { VectorStoreService } from '../pinecone/vectorStore';
-import { RetrievalPort, SearchHit, SearchDocument } from '../contracts/ports';
+import { RetrievalPort, SearchHit, SearchDocument } from '../interfaces/retrieval.port';
 import { workspaces, workItems, snippets, docs } from 'src/common/drizzle/schema';
 import { eq, or, ilike, and } from 'drizzle-orm';
 

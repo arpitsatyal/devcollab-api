@@ -6,16 +6,16 @@ import {
 } from '@langchain/core/messages';
 import { MessagesAnnotation, StateGraph } from '@langchain/langgraph';
 import { ToolNode } from "@langchain/langgraph/prebuilt";
-import { ChatEngineConfig } from '../contracts/ports';
-import { LlmFactoryService } from '../llms/llmFactory';
-import { ToolService } from './toolService';
+import { AiConfig } from '../ai.config';
+import { LlmGateway } from '../interfaces/llm.port';
+import { ToolRegistry } from '../interfaces/tool.port';
 
 @Injectable()
 export class LangGraphService {
   constructor(
-    private readonly llmGateway: LlmFactoryService,
-    private readonly toolService: ToolService,
-    private readonly config: ChatEngineConfig,
+    private readonly llmGateway: LlmGateway,
+    private readonly toolService: ToolRegistry,
+    private readonly config: AiConfig,
   ) { }
 
   /**

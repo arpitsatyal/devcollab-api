@@ -4,7 +4,7 @@ import { RunnableLike } from '@langchain/core/runnables';
 import { StructuredTool } from '@langchain/core/tools';
 import { GroqLlmService } from './groqLLM';
 import { TogetherLlmService } from './togetherLLM';
-import { LlmGateway } from '../contracts/ports';
+import { LlmGateway } from '../interfaces/llm.port';
 
 @Injectable()
 export class LlmFactoryService implements LlmGateway {

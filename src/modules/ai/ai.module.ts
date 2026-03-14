@@ -3,10 +3,6 @@ import { AiService } from './services/ai.service';
 import { AiController } from './controllers/ai.controller';
 import { ChatEngineService } from './services/chatEngine.service';
 import { SuggestionService } from './services/suggestionService';
-import { GenerationService } from './services/generationService';
-import { PromptService } from './services/promptService';
-import { RetrievalService } from './services/retrievalService';
-import { ToolService } from './services/toolService';
 import { MessageModule } from '../message/message.module';
 import { WorkItemsModule } from '../work-items/work-items.module';
 import { ChatHistoryRepository } from './repositories/chat-history.repository';
@@ -16,27 +12,36 @@ import { WorkItemRepository } from '../work-items/repositories/work-item.reposit
 import { LangGraphService } from './services/lang-graph.service';
 import { LlmModule } from './llms/llm.module';
 import { VectorModule } from './pinecone/vector.module';
-import { ChatEngineConfig } from './contracts/ports';
+import { AiConfig } from './ai.config';
 import { MessageHistoryService } from './services/messageHistoryService';
+import { GenerationPort } from './interfaces/generation.port';
+import { PromptPort } from './interfaces/prompt.port';
+import { ToolRegistry } from './interfaces/tool.port';
+import { RetrievalPort } from './interfaces/retrieval.port';
+import { MessageHistoryPort } from './interfaces/history.port';
+import { GenerationService } from './services/generationService';
+import { PromptService } from './services/promptService';
+import { RetrievalService } from './services/retrievalService';
+import { ToolService } from './services/toolService';
 
 @Module({
   imports: [MessageModule, WorkItemsModule, LlmModule, VectorModule],
   providers: [
+    AiConfig,
     AiService,
     ChatEngineService,
     SuggestionService,
-    GenerationService,
-    PromptService,
-    RetrievalService,
-    ToolService,
-    ChatEngineConfig,
-    MessageHistoryService,
+    LangGraphService,
+    { provide: GenerationPort, useClass: GenerationService },
+    { provide: PromptPort, useClass: PromptService },
+    { provide: RetrievalPort, useClass: RetrievalService },
+    { provide: ToolRegistry, useClass: ToolService },
+    { provide: MessageHistoryPort, useClass: MessageHistoryService },
     ChatHistoryRepository,
     SnippetRepository,
     DocRepository,
-    WorkItemRepository,
-    LangGraphService,
+    WorkItemRepository
   ],
   controllers: [AiController],
 })
-export class AiModule {}
+export class AiModule { }

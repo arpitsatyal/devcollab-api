@@ -3,13 +3,13 @@ import { StringOutputParser } from '@langchain/core/output_parsers';
 import { DrizzleService } from 'src/common/drizzle/drizzle.service';
 import { workspaces, workItems } from 'src/common/drizzle/schema';
 import { eq } from 'drizzle-orm';
-import { LlmFactoryService } from '../llms/llmFactory';
+import { LlmGateway } from '../interfaces/llm.port';
 
 @Injectable()
 export class SuggestionService {
   constructor(
     private readonly drizzle: DrizzleService,
-    private readonly llmFactory: LlmFactoryService,
+    private readonly llmFactory: LlmGateway,
   ) { }
 
   async suggestWorkItems(workspaceId: string | undefined) {

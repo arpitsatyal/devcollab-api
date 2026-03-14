@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { z } from 'zod';
-import { PromptPort } from '../contracts/ports';
+import { PromptPort } from '../interfaces/prompt.port';
 
 export const IntentSchema = z.object({
   intent: z.enum(['WORKSPACE_QUERY', 'CONVERSATIONAL']),

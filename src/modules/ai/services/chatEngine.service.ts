@@ -1,27 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { BaseMessage } from '@langchain/core/messages';
 import { StringOutputParser } from '@langchain/core/output_parsers';
-import { ChatEngineConfig, SearchHit } from '../contracts/ports';
+import { AiConfig } from '../ai.config';
 import { RunnableLike } from '@langchain/core/runnables';
 import { z } from 'zod';
 import { LangGraphService } from './lang-graph.service';
-import { IntentSchema, PromptService } from './promptService';
-import { RetrievalService } from './retrievalService';
-import { GenerationService } from './generationService';
-import { ToolService } from './toolService';
-import { LlmFactoryService } from '../llms/llmFactory';
-import { MessageHistoryService } from './messageHistoryService';
+import { IntentSchema } from './promptService';
+import { PromptPort } from '../interfaces/prompt.port';
+import { RetrievalPort, SearchHit } from '../interfaces/retrieval.port';
+import { GenerationPort } from '../interfaces/generation.port';
+import { LlmGateway } from '../interfaces/llm.port';
+import { MessageHistoryPort } from '../interfaces/history.port';
 
 @Injectable()
 export class ChatEngineService {
   constructor(
-    private readonly promptService: PromptService,
-    private readonly retrievalService: RetrievalService,
-    private readonly generationService: GenerationService,
-    private readonly toolService: ToolService,
-    private readonly llmGateway: LlmFactoryService,
-    private readonly historyStore: MessageHistoryService,
-    private readonly config: ChatEngineConfig,
+    private readonly promptService: PromptPort,
+    private readonly retrievalService: RetrievalPort,
+    private readonly generationService: GenerationPort,
+    private readonly llmGateway: LlmGateway,
+    private readonly historyStore: MessageHistoryPort,
+    private readonly config: AiConfig,
     private readonly langGraphService: LangGraphService,
   ) { }
 
