@@ -3,7 +3,7 @@ import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { Document } from '@langchain/core/documents';
 import { DrizzleService } from 'src/common/drizzle/drizzle.service';
-import { VectorStoreService } from '../pinecone/vectorStore';
+import { VectorStoreService } from '../pinecone/vector-store-service';
 import { RetrievalPort, SearchHit, SearchDocument } from '../interfaces/retrieval.port';
 import { workspaces, workItems, snippets, docs } from 'src/common/drizzle/schema';
 import { eq, or, ilike, and } from 'drizzle-orm';
@@ -15,7 +15,7 @@ export class RetrievalService implements RetrievalPort {
   constructor(
     private readonly drizzle: DrizzleService,
     private readonly vectorStoreService: VectorStoreService,
-  ) {}
+  ) { }
 
   async generateQueryVariations(
     query: string,

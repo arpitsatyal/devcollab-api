@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
 import { AiService } from './services/ai.service';
 import { AiController } from './controllers/ai.controller';
-import { ChatEngineService } from './services/chatEngine.service';
-import { SuggestionService } from './services/suggestionService';
+import { ChatEngineService } from './services/chat-engine.service';
+import { SuggestionService } from './services/suggestion.service';
 import { MessageModule } from '../message/message.module';
 import { WorkItemsModule } from '../work-items/work-items.module';
-import { ChatHistoryRepository } from './repositories/chat-history.repository';
 import { SnippetRepository } from '../snippets/repositories/snippet.repository';
 import { DocRepository } from '../docs/repositories/doc.repository';
 import { WorkItemRepository } from '../work-items/repositories/work-item.repository';
@@ -13,17 +12,15 @@ import { LangGraphService } from './services/lang-graph.service';
 import { LlmModule } from './llms/llm.module';
 import { VectorModule } from './pinecone/vector.module';
 import { AiConfig } from './ai.config';
-import { MessageHistoryService } from './services/messageHistoryService';
 import { GenerationPort } from './interfaces/generation.port';
 import { PromptPort } from './interfaces/prompt.port';
 import { ToolRegistry } from './interfaces/tool.port';
 import { RetrievalPort } from './interfaces/retrieval.port';
-import { MessageHistoryPort } from './interfaces/history.port';
 import { AgentPort } from './interfaces/agent.port';
-import { GenerationService } from './services/generationService';
-import { PromptService } from './services/promptService';
-import { RetrievalService } from './services/retrievalService';
-import { ToolService } from './services/toolService';
+import { GenerationService } from './services/generation.service';
+import { PromptService } from './services/prompt.service';
+import { RetrievalService } from './services/retrieval.service';
+import { ToolService } from './services/tool.service';
 
 @Module({
   imports: [MessageModule, WorkItemsModule, LlmModule, VectorModule],
@@ -36,9 +33,7 @@ import { ToolService } from './services/toolService';
     { provide: PromptPort, useClass: PromptService },
     { provide: RetrievalPort, useClass: RetrievalService },
     { provide: ToolRegistry, useClass: ToolService },
-    { provide: MessageHistoryPort, useClass: MessageHistoryService },
     { provide: AgentPort, useClass: LangGraphService },
-    ChatHistoryRepository,
     SnippetRepository,
     DocRepository,
     WorkItemRepository,

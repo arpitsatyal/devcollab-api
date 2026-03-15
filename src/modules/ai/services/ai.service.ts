@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { ChatEngineService } from './chatEngine.service';
-import { SuggestionService } from './suggestionService';
+import { ChatEngineService } from './chat-engine.service';
+import { SuggestionService } from './suggestion.service';
 import { MessageService } from 'src/modules/message/message.service';
 import { WorkItemsService } from 'src/modules/work-items/work-items.service';
 

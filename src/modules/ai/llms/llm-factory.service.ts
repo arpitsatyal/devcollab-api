@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { RunnableLike } from '@langchain/core/runnables';
 import { StructuredTool } from '@langchain/core/tools';
-import { GroqLlmService } from './groqLLM';
-import { TogetherLlmService } from './togetherLLM';
+import { GroqLlmService } from './groq-llm.service';
+import { TogetherLlmService } from './together-llm.service';
 import { LlmGateway } from '../interfaces/llm.port';
 
 @Injectable()

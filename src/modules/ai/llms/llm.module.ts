@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { LlmFactoryService } from './llmFactory';
-import { GroqLlmService } from './groqLLM';
-import { TogetherLlmService } from './togetherLLM';
+import { LlmFactoryService } from './llm-factory.service';
+import { GroqLlmService } from './groq-llm.service';
+import { TogetherLlmService } from './together-llm.service';
 
 import { LlmGateway } from '../interfaces/llm.port';
 

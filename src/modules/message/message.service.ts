@@ -12,4 +12,8 @@ export class MessageService {
   async saveAiMessage(chatId: string, content: string) {
     return this.repo.create({ data: { chatId, content, isUser: false } });
   }
+
+  async getHistory(chatId: string, limit: number) {
+    return this.repo.findMany(chatId, limit);
+  }
 }

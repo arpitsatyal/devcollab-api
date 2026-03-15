@@ -14,12 +14,18 @@ export class MessageRepository {
     });
   }
 
-  findMany(chatId: string) {
-    return this.drizzle.db
+  findMany(chatId: string, limit?: number) {
+    const query = this.drizzle.db
       .select()
       .from(messages)
       .where(eq(messages.chatId, chatId))
       .orderBy(asc(messages.createdAt));
+
+    if (limit) {
+      query.limit(limit);
+    }
+
+    return query;
   }
 
   async create(args: { data: { chatId: string; content: string; isUser: boolean } }) {

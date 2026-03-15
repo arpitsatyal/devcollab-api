@@ -5,12 +5,12 @@ import { AiConfig } from '../ai.config';
 import { RunnableLike } from '@langchain/core/runnables';
 import { z } from 'zod';
 import { LangGraphService } from './lang-graph.service';
-import { IntentSchema } from './promptService';
+import { IntentSchema } from './prompt.service';
 import { PromptPort } from '../interfaces/prompt.port';
 import { RetrievalPort, SearchHit } from '../interfaces/retrieval.port';
 import { GenerationPort } from '../interfaces/generation.port';
 import { LlmGateway } from '../interfaces/llm.port';
-import { MessageHistoryPort } from '../interfaces/history.port';
+import { MessageService } from 'src/modules/message/message.service';
 import { AgentPort } from '../interfaces/agent.port';
 
 @Injectable()
@@ -20,17 +20,24 @@ export class ChatEngineService {
     private readonly retrievalService: RetrievalPort,
     private readonly generationService: GenerationPort,
     private readonly llmGateway: LlmGateway,
-    private readonly historyStore: MessageHistoryPort,
+    private readonly messageService: MessageService,
     private readonly config: AiConfig,
     private readonly langGraphService: AgentPort,
   ) { }
+
+  private async getFormattedHistory(chatId: string, limit: number): Promise<string> {
+    const messages = await this.messageService.getHistory(chatId, limit);
+    return messages
+      .map((m) => (m.isUser ? `User: ${m.content}` : `AI: ${m.content}`))
+      .join('\n');
+  }
 
   private async getAIResponseWithTools(
     chatId: string,
     question: string,
     workspaceId: string,
   ) {
-    const history = await this.historyStore.getRecentHistory(chatId, 10);
+    const history = await this.getFormattedHistory(chatId, 10);
     const messages: BaseMessage[] = this.promptService.buildChatMessages(
       history,
       question,
@@ -94,7 +101,7 @@ export class ChatEngineService {
           .join('\n\n')
         : "I don't have enough specific information in my records to answer this fully.";
 
-    const history = await this.historyStore.getRecentHistory(chatId, 10);
+    const history = await this.getFormattedHistory(chatId, 10);
     const fullPrompt = await this.promptService.constructPrompt(
       context,
       history,
@@ -158,7 +165,7 @@ export class ChatEngineService {
       console.log(
         '[Chat Engine] Intent classified as CONVERSATIONAL. Skipping tools/search.',
       );
-      const history = await this.historyStore.getRecentHistory(chatId, 10);
+      const history = await this.getFormattedHistory(chatId, 10);
       const conversationalMessages =
         this.promptService.buildConversationalMessages(history, question);
       const conversationalLlm = await this.llmGateway.getSpeedyLLM();
