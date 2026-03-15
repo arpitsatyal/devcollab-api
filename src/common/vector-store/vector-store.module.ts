@@ -4,8 +4,9 @@ import { VectorStorePort } from './ports/vector-store.port';
 
 @Module({
   providers: [
+    VectorStoreService,
     { provide: VectorStorePort, useClass: VectorStoreService },
   ],
-  exports: [VectorStorePort],
+  exports: [VectorStoreService, VectorStorePort],
 })
 export class VectorStoreModule { }

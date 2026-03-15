@@ -12,9 +12,16 @@ import { QueueModule } from '../queue/queue.module';
 import { RawBodyMiddleware } from 'src/common/middlewares/raw-body.middleware';
 import { UsersModule } from '../users/users.module';
 import { DocsModule } from '../docs/docs.module';
+import { CollaborationModule } from '../collaboration/collaboration.module';
 
 @Module({
-  imports: [VectorStoreModule, QueueModule, UsersModule, DocsModule],
+  imports: [
+    VectorStoreModule,
+    QueueModule,
+    UsersModule,
+    DocsModule,
+    CollaborationModule,
+  ],
   controllers: [VectorSyncController, CollaborationWebhookController],
   providers: [CollaborationWebhookService],
 })
