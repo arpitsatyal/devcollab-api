@@ -1,29 +1,45 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Pinecone } from '@pinecone-database/pinecone';
-import { PineconeInferenceEmbeddings } from 'src/modules/ai/engine/pinecone/pinecone-embeddings';
+import { PineconeStore } from '@langchain/pinecone';
+import { Document } from '@langchain/core/documents';
+import { PineconeInferenceEmbeddings } from './pinecone-embeddings';
 import { DrizzleService } from 'src/common/drizzle/drizzle.service';
 import { workspaces, workItems, snippets, docs } from 'src/common/drizzle/schema';
 import { eq } from 'drizzle-orm';
+import { VectorStorePort } from './ports/vector-store.port';
 
 export type SyncType = 'workspace' | 'workItem' | 'snippet' | 'doc';
 
 @Injectable()
-export class PineconeService {
-  private readonly logger = new Logger(PineconeService.name);
+export class VectorStoreService implements VectorStorePort {
+  private readonly logger = new Logger(VectorStoreService.name);
   private readonly client = new Pinecone({
     apiKey: process.env.PINECONE_API_KEY!,
   });
   private readonly indexName = process.env.PINECONE_INDEX!;
   private readonly embeddings = new PineconeInferenceEmbeddings();
 
-  constructor(private readonly drizzle: DrizzleService) {}
+  constructor(private readonly drizzle: DrizzleService) { }
+
+  async search(
+    query: string,
+    limit: number,
+    filters?: Record<string, any>,
+  ): Promise<[Document, number][]> {
+    const pineconeIndex = this.client.index(this.indexName);
+    const vectorStore = await PineconeStore.fromExistingIndex(this.embeddings, {
+      pineconeIndex,
+    });
+
+    return vectorStore.similaritySearchWithScore(query, limit, filters as any);
+  }
 
   async syncToVectorStore(
     type: SyncType,
     id: string,
     action: 'upsert' | 'delete',
   ) {
-    const index = this.client.index({ name: this.indexName });
+    const index = this.client.index(this.indexName);
 
     if (action === 'delete') {
       try {

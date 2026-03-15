@@ -5,23 +5,23 @@ import {
   RequestMethod,
 } from '@nestjs/common';
 import { VectorSyncController } from './vector-sync.controller';
-import { PineconeModule } from 'src/common/pinecone/pinecone.module';
-import { LiveblocksWebhookController } from './liveblocks-webhook.controller';
-import { LiveblocksWebhookService } from './liveblocks-webhook.service';
+import { VectorStoreModule } from 'src/common/vector-store/vector-store.module';
+import { CollaborationWebhookController } from './collaboration-webhook.controller';
+import { CollaborationWebhookService } from './collaboration-webhook.service';
 import { QueueModule } from '../queue/queue.module';
 import { RawBodyMiddleware } from 'src/common/middlewares/raw-body.middleware';
 import { UsersModule } from '../users/users.module';
 import { DocsModule } from '../docs/docs.module';
 
 @Module({
-  imports: [PineconeModule, QueueModule, UsersModule, DocsModule],
-  controllers: [VectorSyncController, LiveblocksWebhookController],
-  providers: [LiveblocksWebhookService],
+  imports: [VectorStoreModule, QueueModule, UsersModule, DocsModule],
+  controllers: [VectorSyncController, CollaborationWebhookController],
+  providers: [CollaborationWebhookService],
 })
 export class WebhooksModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(RawBodyMiddleware)
-      .forRoutes({ path: 'webhooks/liveblocks', method: RequestMethod.POST });
+      .forRoutes({ path: 'webhooks/collaboration', method: RequestMethod.POST });
   }
 }

@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { SnippetsService } from './snippets.service';
 import { SnippetsController } from './snippets.controller';
-import { QstashModule } from 'src/common/qstash/qstash.module';
+import { SyncEventModule } from 'src/common/sync-events/sync-event.module';
 import { SnippetRepository } from './repositories/snippet.repository';
 
 @Module({
-  imports: [QstashModule],
+  imports: [SyncEventModule],
   providers: [SnippetsService, SnippetRepository],
   controllers: [SnippetsController],
 })

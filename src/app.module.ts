@@ -10,11 +10,11 @@ import { ChatModule } from './modules/chat/chat.module';
 import { AiModule } from './modules/ai/ai.module';
 import { MessageModule } from './modules/message/message.module';
 import { QueueModule } from './modules/queue/queue.module';
-import { LiveblocksModule } from './modules/liveblocks/liveblocks.module';
+import { CollaborationModule } from './modules/collaboration/collaboration.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { WebhooksModule } from './modules/webhooks/webhooks.module';
-import { PineconeModule } from './common/pinecone/pinecone.module';
-import { QstashModule } from './common/qstash/qstash.module';
+import { VectorStoreModule } from './common/vector-store/vector-store.module';
+import { SyncEventModule } from './common/sync-events/sync-event.module';
 import { DrizzleModule } from './common/drizzle/drizzle.module';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 
@@ -31,10 +31,10 @@ import { LoggerMiddleware } from './common/middlewares/logger.middleware';
     AiModule,
     MessageModule,
     QueueModule,
-    LiveblocksModule,
+    CollaborationModule,
     WebhooksModule,
-    PineconeModule,
-    QstashModule,
+    VectorStoreModule,
+    SyncEventModule,
     DrizzleModule,
   ],
   controllers: [AppController],

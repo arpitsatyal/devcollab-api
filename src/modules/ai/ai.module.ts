@@ -10,20 +10,20 @@ import { DocRepository } from '../docs/repositories/doc.repository';
 import { WorkItemRepository } from '../work-items/repositories/work-item.repository';
 import { LangGraphService } from './services/lang-graph.service';
 import { LlmModule } from './llms/llm.module';
-import { VectorModule } from './pinecone/vector.module';
+import { VectorStoreModule } from 'src/common/vector-store/vector-store.module';
 import { AiConfig } from './ai.config';
-import { GenerationPort } from './interfaces/generation.port';
-import { PromptPort } from './interfaces/prompt.port';
-import { ToolRegistry } from './interfaces/tool.port';
-import { RetrievalPort } from './interfaces/retrieval.port';
-import { AgentPort } from './interfaces/agent.port';
+import { GenerationPort } from './ports/generation.port';
+import { PromptPort } from './ports/prompt.port';
+import { ToolRegistry } from './ports/tool.port';
+import { RetrievalPort } from './ports/retrieval.port';
+import { AgentPort } from './ports/agent.port';
 import { GenerationService } from './services/generation.service';
 import { PromptService } from './services/prompt.service';
 import { RetrievalService } from './services/retrieval.service';
 import { ToolService } from './services/tool.service';
 
 @Module({
-  imports: [MessageModule, WorkItemsModule, LlmModule, VectorModule],
+  imports: [MessageModule, WorkItemsModule, LlmModule, VectorStoreModule],
   providers: [
     AiConfig,
     AiService,

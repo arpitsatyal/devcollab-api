@@ -1,11 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Client } from '@upstash/qstash';
-
-export type EventType = 'workspace' | 'workItem' | 'snippet' | 'doc';
+import { SyncEventPort, EventType } from './ports/sync-event.port';
 
 @Injectable()
-export class QstashService {
-  private readonly logger = new Logger(QstashService.name);
+export class SyncEventService implements SyncEventPort {
+  private readonly logger = new Logger(SyncEventService.name);
   private readonly client = new Client({ token: process.env.QSTASH_TOKEN! });
   private readonly appUrl = process.env.APP_URL;
 

@@ -1,6 +1,6 @@
 import { IsObject, IsString, IsOptional } from 'class-validator';
 
-export class LiveblocksWebhookDto {
+export class CollaborationWebhookDto {
   @IsString()
   type: string;
 

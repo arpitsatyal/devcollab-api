@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { ToolRegistry } from '../interfaces/tool.port';
+import { ToolRegistry } from '../ports/tool.port';
 import { SnippetRepository } from 'src/modules/snippets/repositories/snippet.repository';
 import { DocRepository } from 'src/modules/docs/repositories/doc.repository';
 import { WorkItemRepository } from 'src/modules/work-items/repositories/work-item.repository';

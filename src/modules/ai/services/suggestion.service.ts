@@ -3,7 +3,7 @@ import { StringOutputParser } from '@langchain/core/output_parsers';
 import { DrizzleService } from 'src/common/drizzle/drizzle.service';
 import { workspaces, workItems } from 'src/common/drizzle/schema';
 import { eq } from 'drizzle-orm';
-import { LlmGateway } from '../interfaces/llm.port';
+import { LlmGateway } from '../ports/llm.port';
 
 @Injectable()
 export class SuggestionService {

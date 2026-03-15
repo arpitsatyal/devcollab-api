@@ -1,21 +1,9 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { Octokit } from '@octokit/rest';
-
-export interface GitRepoDetails {
-  owner: string;
-  repo: string;
-  defaultBranch: string;
-  description?: string | null;
-}
-
-export interface RepoTreeFile {
-  path: string;
-  size: number;
-  url: string;
-}
+import { SourceCodePort, GitRepoDetails, RepoTreeFile } from '../ports/source-code.port';
 
 @Injectable()
-export class GithubClient {
+export class GithubClient implements SourceCodePort {
   private readonly octokit = new Octokit();
 
   private parseGitHubUrl(url: string) {

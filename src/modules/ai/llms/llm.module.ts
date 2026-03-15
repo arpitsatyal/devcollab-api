@@ -3,7 +3,7 @@ import { LlmFactoryService } from './llm-factory.service';
 import { GroqLlmService } from './groq-llm.service';
 import { TogetherLlmService } from './together-llm.service';
 
-import { LlmGateway } from '../interfaces/llm.port';
+import { LlmGateway } from '../ports/llm.port';
 
 @Module({
   providers: [

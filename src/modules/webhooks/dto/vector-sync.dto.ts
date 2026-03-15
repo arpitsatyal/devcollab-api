@@ -1,5 +1,5 @@
 import { IsEnum, IsObject, IsString, IsOptional } from 'class-validator';
-import { SyncType } from 'src/common/pinecone/pinecone.service';
+import { SyncType } from 'src/common/vector-store/vector-store.service';
 
 export class VectorSyncPayloadDto {
   @IsEnum(['workspace', 'workItem', 'snippet', 'doc'] as any)

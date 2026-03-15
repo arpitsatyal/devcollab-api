@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { StringOutputParser } from '@langchain/core/output_parsers';
-import { AnswerPayload, GenerationPort } from '../interfaces/generation.port';
-import { SearchHit } from '../interfaces/retrieval.port';
+import { AnswerPayload, GenerationPort } from '../ports/generation.port';
+import { SearchHit } from '../ports/retrieval.port';
 
 @Injectable()
 export class GenerationService implements GenerationPort {

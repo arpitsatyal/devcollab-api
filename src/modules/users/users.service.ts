@@ -94,7 +94,7 @@ export class UsersService {
     };
   }
 
-  async getLiveblocksUsers(userIds: string[]) {
+  async getCollaborationUsers(userIds: string[]) {
     const found = await this.userRepo.findManyByIds(userIds);
 
     const userMap = new Map(found.map((u) => [u.id, u]));

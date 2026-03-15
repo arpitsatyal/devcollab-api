@@ -1,17 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { LiveblocksService } from './liveblocks.service';
+import { CollaborationService } from './collaboration.service';
 
-describe('LiveblocksService', () => {
-  let service: LiveblocksService;
+describe('CollaborationService', () => {
+  let service: CollaborationService;
 
   beforeEach(async () => {
     process.env.LIVEBLOCKS_SECRET_KEY = 'sk_test_mock_key';
     
     const module: TestingModule = await Test.createTestingModule({
-      providers: [LiveblocksService],
+      providers: [CollaborationService],
     }).compile();
 
-    service = module.get<LiveblocksService>(LiveblocksService);
+    service = module.get<CollaborationService>(CollaborationService);
   });
 
   it('should be defined', () => {

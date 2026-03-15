@@ -3,8 +3,8 @@ import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { Document } from '@langchain/core/documents';
 import { DrizzleService } from 'src/common/drizzle/drizzle.service';
-import { VectorStoreService } from '../pinecone/vector-store-service';
-import { RetrievalPort, SearchHit, SearchDocument } from '../interfaces/retrieval.port';
+import { VectorStorePort } from 'src/common/vector-store/ports/vector-store.port';
+import { RetrievalPort, SearchHit, SearchDocument } from '../ports/retrieval.port';
 import { workspaces, workItems, snippets, docs } from 'src/common/drizzle/schema';
 import { eq, or, ilike, and } from 'drizzle-orm';
 
@@ -14,7 +14,7 @@ export class RetrievalService implements RetrievalPort {
 
   constructor(
     private readonly drizzle: DrizzleService,
-    private readonly vectorStoreService: VectorStoreService,
+    private readonly vectorStorePort: VectorStorePort,
   ) { }
 
   async generateQueryVariations(
@@ -154,10 +154,8 @@ export class RetrievalService implements RetrievalPort {
     originalQuery: string,
     filters?: Record<string, any>,
   ): Promise<SearchHit[]> {
-    const vectorStore = await this.vectorStoreService.getVectorStore();
-
     const vectorSearchPromises = queries.map((q) =>
-      vectorStore.similaritySearchWithScore(q, 5, filters as any),
+      this.vectorStorePort.search(q, 5, filters),
     );
 
     const vectorResultsArrays = await Promise.all(vectorSearchPromises);

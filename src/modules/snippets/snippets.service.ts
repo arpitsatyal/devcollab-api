@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { SnippetsCreateDto, SnippetsUpdateDto } from './dto/snippets.dto';
-import { QstashService } from 'src/common/qstash/qstash.service';
+import { SyncEventPort } from 'src/common/sync-events/ports/sync-event.port';
 import { SnippetRepository } from './repositories/snippet.repository';
 
 @Injectable()
 export class SnippetsService {
   constructor(
-    private qstashService: QstashService,
+    private syncPort: SyncEventPort,
     private readonly snippetRepo: SnippetRepository,
   ) {}
 
@@ -35,7 +35,7 @@ export class SnippetsService {
       workspaceId,
     });
 
-    await this.qstashService.publishSyncEvent('snippet', snippet);
+    await this.syncPort.publishSyncEvent('snippet', snippet);
     return snippet;
   }
 
@@ -53,7 +53,7 @@ export class SnippetsService {
 
     if (!updated) throw new NotFoundException('Snippet not found');
 
-    await this.qstashService.publishSyncEvent('snippet', updated);
+    await this.syncPort.publishSyncEvent('snippet', updated);
     return updated;
   }
 }

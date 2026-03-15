@@ -4,21 +4,21 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateWorkspaceDto } from './dto/workspaces.dto';
-import { QstashService } from 'src/common/qstash/qstash.service';
+import { SyncEventPort } from 'src/common/sync-events/ports/sync-event.port';
 import { randomUUID } from 'crypto';
 import { WorkspaceRepository } from './infrastructure/workspace.repository';
 import { WorkspaceImportRepository } from './infrastructure/workspace-import.repository';
-import { GithubClient } from './infrastructure/github.client';
+import { SourceCodePort } from './ports/source-code.port';
 import { SNIPPET_EXTENSIONS } from './utils/constants';
 
 @Injectable()
 export class WorkspacesService {
 
   constructor(
-    private qstashService: QstashService,
+    private syncPort: SyncEventPort,
     private readonly workspaceRepo: WorkspaceRepository,
     private readonly importRepo: WorkspaceImportRepository,
-    private readonly githubClient: GithubClient,
+    private readonly sourceCodeClient: SourceCodePort,
   ) { }
 
   async getWorkspace(id: string) {
@@ -52,7 +52,7 @@ export class WorkspacesService {
       ownerId: user.id,
     });
 
-    await this.qstashService.publishSyncEvent('workspace', workspace);
+    await this.syncPort.publishSyncEvent('workspace', workspace);
     return workspace;
   }
 
@@ -77,8 +77,8 @@ export class WorkspacesService {
   }
 
   async fetchRepoTree(url: string) {
-    const repoDetails = await this.githubClient.getRepoDetails(url);
-    const files = await this.githubClient.getRepoTree(repoDetails);
+    const repoDetails = await this.sourceCodeClient.getRepoDetails(url);
+    const files = await this.sourceCodeClient.getRepoTree(repoDetails);
     return {
       owner: repoDetails.owner,
       repo: repoDetails.repo,
@@ -98,7 +98,7 @@ export class WorkspacesService {
     if (!selectedFiles?.length)
       throw new BadRequestException('No files selected for import');
 
-    const repoDetails = await this.githubClient.getRepoDetails(url);
+    const repoDetails = await this.sourceCodeClient.getRepoDetails(url);
 
     const workspace = await this.workspaceRepo.create({
       title: repoDetails.repo,
@@ -109,7 +109,7 @@ export class WorkspacesService {
     const fetchResults = await Promise.all(
       selectedFiles.map(async (path) => {
         try {
-          const content = await this.githubClient.fetchFileContent(
+          const content = await this.sourceCodeClient.fetchFileContent(
             repoDetails,
             path,
           );
@@ -165,7 +165,7 @@ export class WorkspacesService {
     await this.importRepo.createSnippets(snippetsData);
     await this.importRepo.createDocs(docsData);
 
-    await this.qstashService.publishSyncEvent('workspace', workspace);
+    await this.syncPort.publishSyncEvent('workspace', workspace);
 
     return {
       success: true,

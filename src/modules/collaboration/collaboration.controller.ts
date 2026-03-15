@@ -1,22 +1,22 @@
 import { Controller, Post, Body, Res, UseGuards } from '@nestjs/common';
 import { SessionAuthGuard } from 'src/common/guards/auth.guard';
-import { LiveblocksService } from './liveblocks.service';
+import { CollaborationPort } from './ports/collaboration.port';
 import { Response } from 'express';
 import { CurrentUser } from '../users/user.decorator';
-import { LiveblocksUserDto } from './liveblocksUser.dto';
+import { CollaborationUserDto } from './collaboration-user.dto';
 
-@Controller('liveblocks')
-export class LiveblocksController {
-  constructor(private readonly liveblocksService: LiveblocksService) {}
+@Controller('collaboration')
+export class CollaborationController {
+  constructor(private readonly collaborationPort: CollaborationPort) {}
 
   @UseGuards(SessionAuthGuard)
   @Post('auth')
   async authorize(
-    @CurrentUser() user: LiveblocksUserDto,
+    @CurrentUser() user: CollaborationUserDto,
     @Body('room') room: string,
     @Res() res: Response,
   ) {
-    const { body, status } = await this.liveblocksService.authorizeRoom(
+    const { body, status } = await this.collaborationPort.authorizeRoom(
       user,
       room,
     );

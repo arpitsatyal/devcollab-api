@@ -24,10 +24,10 @@ export class UsersController {
     return this.usersService.getStatsByEmail(user.email!);
   }
 
-  @Get('liveblocks')
-  liveblocks(@Query('userIds') userIds: string) {
+  @Get('collaboration')
+  collaboration(@Query('userIds') userIds: string) {
     const ids = userIds ? userIds.split(',') : [];
-    return this.usersService.getLiveblocksUsers(ids);
+    return this.usersService.getCollaborationUsers(ids);
   }
 
   @Get(':id')

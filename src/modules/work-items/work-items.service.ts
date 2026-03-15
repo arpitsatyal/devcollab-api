@@ -3,13 +3,13 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { QueueService } from 'src/modules/queue/queue.service';
+import { QueuePort } from 'src/modules/queue/ports/queue.port';
 import {
   WorkItemCreateDto,
   WorkItemUpdateStatusDto,
 } from './dto/work-items.dto';
 import dayjs from 'dayjs';
-import { QstashService } from 'src/common/qstash/qstash.service';
+import { SyncEventPort } from 'src/common/sync-events/ports/sync-event.port';
 import { WorkItemRepository } from './repositories/work-item.repository';
 import { WorkItemStatus } from 'src/common/drizzle/schema';
 import { DrizzleService } from 'src/common/drizzle/drizzle.service';
@@ -19,8 +19,8 @@ import { eq } from 'drizzle-orm';
 @Injectable()
 export class WorkItemsService {
   constructor(
-    private readonly queueService: QueueService,
-    private readonly qstashService: QstashService,
+    private readonly queueClient: QueuePort,
+    private readonly syncPort: SyncEventPort,
     private readonly workItemRepo: WorkItemRepository,
     private readonly drizzle: DrizzleService,
   ) {}
@@ -67,7 +67,7 @@ export class WorkItemsService {
       });
 
       if (assignee?.email) {
-        await this.queueService.sendMessage({
+        await this.queueClient.sendMessage({
           assigneeEmail: assignee.email,
           assigneeName: assignee.name ?? 'Team Member',
           workspaceId: workItem.workspaceId,
@@ -81,7 +81,7 @@ export class WorkItemsService {
       }
     }
 
-    await this.qstashService.publishSyncEvent('workItem', workItem);
+    await this.syncPort.publishSyncEvent('workItem', workItem);
     return workItem;
   }
 
@@ -96,7 +96,7 @@ export class WorkItemsService {
       });
 
       if (assignee?.email) {
-        await this.queueService.sendMessage({
+        await this.queueClient.sendMessage({
           assigneeEmail: assignee.email,
           assigneeName: assignee.name ?? 'Team Member',
           workspaceId: updatedWorkItem.workspaceId,
@@ -107,7 +107,7 @@ export class WorkItemsService {
       }
     }
 
-    await this.qstashService.publishSyncEvent('workItem', updatedWorkItem);
+    await this.syncPort.publishSyncEvent('workItem', updatedWorkItem);
     return updatedWorkItem;
   }
 

@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { WorkspacesService } from './workspaces.service';
-import { QstashService } from 'src/common/qstash/qstash.service';
+import { SyncEventPort } from 'src/common/sync-events/ports/sync-event.port';
 import { WorkspaceRepository } from './infrastructure/workspace.repository';
 import { WorkspaceImportRepository } from './infrastructure/workspace-import.repository';
-import { GithubClient } from './infrastructure/github.client';
+import { SourceCodePort } from './ports/source-code.port';
 
 describe('WorkspacesService', () => {
   let service: WorkspacesService;
@@ -12,10 +12,10 @@ describe('WorkspacesService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         WorkspacesService,
-        { provide: QstashService, useValue: {} },
+        { provide: SyncEventPort, useValue: {} },
         { provide: WorkspaceRepository, useValue: {} },
         { provide: WorkspaceImportRepository, useValue: {} },
-        { provide: GithubClient, useValue: {} },
+        { provide: SourceCodePort, useValue: {} },
       ],
     }).compile();
 

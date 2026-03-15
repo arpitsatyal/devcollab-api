@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DocsService } from './docs.service';
-import { QstashService } from 'src/common/qstash/qstash.service';
+import { SyncEventPort } from 'src/common/sync-events/ports/sync-event.port';
 import { DocRepository } from './repositories/doc.repository';
 
 describe('DocsService', () => {
@@ -10,7 +10,7 @@ describe('DocsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DocsService,
-        { provide: QstashService, useValue: {} },
+        { provide: SyncEventPort, useValue: {} },
         { provide: DocRepository, useValue: {} },
       ],
     }).compile();

@@ -3,21 +3,18 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import axios from 'axios';
-import { Liveblocks } from '@liveblocks/node';
-import { QueueService } from 'src/modules/queue/queue.service';
+import { CollaborationPort } from '../collaboration/ports/collaboration.port';
+import { QueuePort } from 'src/modules/queue/ports/queue.port';
 import { UserRepository } from '../users/repositories/user.repository';
 import { DocRepository } from '../docs/repositories/doc.repository';
 
 @Injectable()
-export class LiveblocksWebhookService {
-  private readonly logger = new Logger(LiveblocksWebhookService.name);
-  private readonly liveblocks = new Liveblocks({
-    secret: process.env.LIVEBLOCKS_SECRET_KEY!,
-  });
+export class CollaborationWebhookService {
+  private readonly logger = new Logger(CollaborationWebhookService.name);
 
   constructor(
-    private readonly queueService: QueueService,
+    private readonly collaborationClient: CollaborationPort,
+    private readonly queueClient: QueuePort,
     private readonly userRepo: UserRepository,
     private readonly docRepo: DocRepository,
   ) { }
@@ -84,7 +81,7 @@ export class LiveblocksWebhookService {
   //   ]);
 
   //   try {
-  //     await this.queueService.sendMessage({
+  //     await this.queueClient.sendMessage({
   //       assigneeEmail: user.email,
   //       content: mention.content,
   //       mentionUrl: `https://www.devcollab.store/workspaces/${doc?.workspaceId}/docs?docId=${doc?.id}`,
@@ -102,18 +99,7 @@ export class LiveblocksWebhookService {
 
   private async handleYdocUpdated(data: any) {
     try {
-      const response = await axios.get(
-        `https://api.liveblocks.io/v2/rooms/${data.roomId}/ydoc`,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.LIVEBLOCKS_SECRET_KEY}`,
-            Accept: 'application/octet-stream',
-          },
-          responseType: 'arraybuffer',
-        },
-      );
-
-      const content = response.data.toString('utf8');
+      const content = await this.collaborationClient.getYdocContent(data.roomId);
 
       if (!content) {
         this.logger.log(`No content received for roomId: ${data.roomId}`);

@@ -4,14 +4,13 @@ import { StringOutputParser } from '@langchain/core/output_parsers';
 import { AiConfig } from '../ai.config';
 import { RunnableLike } from '@langchain/core/runnables';
 import { z } from 'zod';
-import { LangGraphService } from './lang-graph.service';
 import { IntentSchema } from './prompt.service';
-import { PromptPort } from '../interfaces/prompt.port';
-import { RetrievalPort, SearchHit } from '../interfaces/retrieval.port';
-import { GenerationPort } from '../interfaces/generation.port';
-import { LlmGateway } from '../interfaces/llm.port';
+import { PromptPort } from '../ports/prompt.port';
+import { RetrievalPort, SearchHit } from '../ports/retrieval.port';
+import { GenerationPort } from '../ports/generation.port';
+import { LlmGateway } from '../ports/llm.port';
 import { MessageService } from 'src/modules/message/message.service';
-import { AgentPort } from '../interfaces/agent.port';
+import { AgentPort } from '../ports/agent.port';
 
 @Injectable()
 export class ChatEngineService {

@@ -7,9 +7,9 @@ import {
 import { MessagesAnnotation, StateGraph } from '@langchain/langgraph';
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { AiConfig } from '../ai.config';
-import { LlmGateway } from '../interfaces/llm.port';
-import { ToolRegistry } from '../interfaces/tool.port';
-import { AgentPort } from '../interfaces/agent.port';
+import { LlmGateway } from '../ports/llm.port';
+import { ToolRegistry } from '../ports/tool.port';
+import { AgentPort } from '../ports/agent.port';
 
 @Injectable()
 export class LangGraphService implements AgentPort {

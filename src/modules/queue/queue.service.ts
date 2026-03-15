@@ -1,8 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
+import { QueuePort } from './ports/queue.port';
 
 @Injectable()
-export class QueueService {
+export class QueueService implements QueuePort {
   private readonly logger = new Logger(QueueService.name);
   private readonly sqsClient = new SQSClient({ region: 'us-east-2' });
   private readonly queueUrl = process.env.QUEUE_URL;

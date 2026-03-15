@@ -1,6 +1,6 @@
 import { IsOptional, IsString } from 'class-validator';
 
-export class LiveblocksUserDto {
+export class CollaborationUserDto {
   @IsString()
   id: string;
 

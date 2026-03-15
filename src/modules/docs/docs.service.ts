@@ -1,13 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { DocCreateDto, DocUpdateDto } from './dto/docs.dto';
-import { QstashService } from 'src/common/qstash/qstash.service';
+import { SyncEventPort } from 'src/common/sync-events/ports/sync-event.port';
 import { DocRepository } from './repositories/doc.repository';
 
 @Injectable()
 export class DocsService {
   constructor(
-    private qstashService: QstashService,
+    private syncPort: SyncEventPort,
     private readonly docRepo: DocRepository,
   ) {}
 
@@ -28,7 +28,7 @@ export class DocsService {
       roomId: `docs_${uuidv4()}`,
     });
 
-    await this.qstashService.publishSyncEvent('doc', doc);
+    await this.syncPort.publishSyncEvent('doc', doc);
     return doc;
   }
 
@@ -40,7 +40,7 @@ export class DocsService {
 
     if (!updated) throw new NotFoundException('Doc not found');
 
-    await this.qstashService.publishSyncEvent('doc', updated);
+    await this.syncPort.publishSyncEvent('doc', updated);
     return updated;
   }
 }
