@@ -28,6 +28,8 @@ export const workspaces = pgTable('Workspace', {
   updatedAt: timestamp('updatedAt').defaultNow().notNull(),
 });
 
+export type Workspace = InferSelectModel<typeof workspaces>;
+
 export const userPinnedWorkspaces = pgTable('UserPinnedWorkspace', {
   id: text('id').primaryKey(),
   userId: text('userId').notNull(),
@@ -42,6 +44,8 @@ export const chats = pgTable('Chat', {
   updatedAt: timestamp('updatedAt').defaultNow().notNull(),
 });
 
+export type Chat = InferSelectModel<typeof chats>;
+
 export const messages = pgTable('Message', {
   id: text('id').primaryKey(),
   chatId: text('chatId').notNull(),
@@ -49,6 +53,8 @@ export const messages = pgTable('Message', {
   isUser: boolean('isUser').notNull(),
   createdAt: timestamp('createdAt').defaultNow().notNull(),
 });
+
+export type Message = InferSelectModel<typeof messages>;
 
 export const docs = pgTable('Doc', {
   id: text('id').primaryKey(),
@@ -59,6 +65,8 @@ export const docs = pgTable('Doc', {
   createdAt: timestamp('createdAt').defaultNow().notNull(),
   updatedAt: timestamp('updatedAt').defaultNow().notNull(),
 });
+
+export type Doc = InferSelectModel<typeof docs>;
 
 export const snippets = pgTable('Snippet', {
   id: text('id').primaryKey(),
@@ -73,6 +81,8 @@ export const snippets = pgTable('Snippet', {
   updatedAt: timestamp('updatedAt').defaultNow().notNull(),
 });
 
+export type Snippet = InferSelectModel<typeof snippets>;
+
 export const workItems = pgTable('WorkItem', {
   id: text('id').primaryKey(),
   title: text('title').notNull(),
@@ -86,6 +96,8 @@ export const workItems = pgTable('WorkItem', {
   createdAt: timestamp('createdAt').defaultNow().notNull(),
   updatedAt: timestamp('updatedAt').defaultNow().notNull(),
 });
+
+export type WorkItem = InferSelectModel<typeof workItems>;
 
 export const workItemsToSnippets = pgTable('WorkItemToSnippet', {
   workItemId: text('workItemId').notNull(),
