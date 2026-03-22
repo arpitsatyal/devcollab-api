@@ -5,4 +5,10 @@ export abstract class CollaborationPort {
   ): Promise<{ body: any; status: number }>;
 
   abstract getYdocContent(roomId: string): Promise<string | null>;
+
+  abstract getComment(params: {
+    roomId: string;
+    threadId: string;
+    commentId: string;
+  }): Promise<any>;
 }

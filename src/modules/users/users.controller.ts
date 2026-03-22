@@ -25,8 +25,13 @@ export class UsersController {
   }
 
   @Get('collaboration')
-  collaboration(@Query('userIds') userIds: string) {
-    const ids = userIds ? userIds.split(',') : [];
+  collaboration(@Query('userIds') userIds: string | string[]) {
+    let ids: string[] = [];
+    if (Array.isArray(userIds)) {
+      ids = userIds;
+    } else if (typeof userIds === 'string') {
+      ids = userIds.split(',');
+    }
     return this.usersService.getCollaborationUsers(ids);
   }
 

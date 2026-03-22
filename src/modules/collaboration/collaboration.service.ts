@@ -67,4 +67,13 @@ export class CollaborationService implements CollaborationPort {
       return null;
     }
   }
+
+  async getComment(params: { roomId: string; threadId: string; commentId: string }): Promise<any> {
+    try {
+      return await this.liveblocks.getComment(params);
+    } catch (error) {
+      this.logger.error(`Failed to fetch comment: ${error?.message || error}`);
+      return null;
+    }
+  }
 }

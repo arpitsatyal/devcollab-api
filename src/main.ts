@@ -8,6 +8,10 @@ import { join } from 'path';
 import { ValidationPipe } from '@nestjs/common';
 import * as express from 'express';
 import * as cookieParser from 'cookie-parser';
+import * as pgSession from 'connect-pg-simple';
+import { Pool } from 'pg';
+
+const PgStore = pgSession(session);
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -16,16 +20,27 @@ async function bootstrap() {
   app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser());
 
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+  });
+
+  // Required to ensure secure cookies work behind reverse proxies (Render, Heroku, Railway)
+  app.set('trust proxy', 1);
+
   app.use(
     session({
+      store: new PgStore({
+        pool,
+        createTableIfMissing: true, // Automatically creates the "session" table
+      }),
       secret: process.env.SESSION_SECRET || 'your-session-secret',
       resave: true, // Help with memory store stability
       saveUninitialized: false,
       rolling: true, // Refresh cookie on every request
       cookie: {
-        secure: false, // Set to true in production with HTTPS
+        secure: process.env.NODE_ENV === 'production', // Must be true if frontend and backend are on different domains
         httpOnly: true,
-        sameSite: 'lax', 
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' required for cross-origin cookies
         maxAge: 24 * 60 * 60 * 1000, 
       },
     }),

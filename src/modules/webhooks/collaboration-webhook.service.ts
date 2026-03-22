@@ -21,10 +21,9 @@ export class CollaborationWebhookService {
 
   async handleWebhook(payload: any): Promise<{ message: string }> {
     const { type, data } = payload || {};
-
-    // if (type === 'notification' && data?.kind === 'textMention') {
-    //   return await this.handleTextMentionNotification(data, payload);
-    // }
+    if (type === 'notification' && data?.kind === 'textMention') {
+      return await this.handleTextMentionNotification(data, payload);
+    }
 
     if (type === 'ydocUpdated') {
       return await this.handleYdocUpdated(data);
@@ -33,69 +32,58 @@ export class CollaborationWebhookService {
     return { message: 'No relevant action taken.' };
   }
 
-  // private async handleTextMentionNotification(data: any, payload: any) {
-  //   const user = await this.userRepo.findById(data.userId);
+  private extractLexicalText(node: any): string {
+    if (!node) return '';
+    if (node.type === 'text' && typeof node.text === 'string') {
+      return node.text;
+    }
+    if (Array.isArray(node.children)) {
+      return node.children.map((c: any) => this.extractLexicalText(c)).join('');
+    }
+    return '';
+  }
 
-  //   if (!user?.email) {
-  //     this.logger.warn(`No email found for userId: ${data.userId}`);
-  //     throw new BadRequestException('No email address found.');
-  //   }
+  private async handleTextMentionNotification(data: any, payload: any) {
+    const user = await this.userRepo.findById(data.userId);
 
-  //   let emailData;
-  //   try {
-  //     emailData = await prepareTextMentionNotificationEmailAsReact(
-  //       this.liveblocks,
-  //       payload,
-  //       {
-  //         resolveUsers: async ({ userIds }) => {
-  //           const usersData = await this.userRepo.findManyByIds(userIds);
+    if (!user?.email) {
+      this.logger.warn(`No email found for userId: ${data.userId}`);
+      return { message: 'No email found for user.' };
+    }
 
-  //           const userMap = new Map(usersData.map((u) => [u.id, u]));
-  //           return userIds
-  //             .map((id) => userMap.get(id))
-  //             .filter(Boolean)
-  //             .map((userData) => ({
-  //               name: userData?.name ?? '',
-  //               avatar: userData?.image ?? '',
-  //               color: '0074C2',
-  //               email: userData?.email ?? '',
-  //             }));
-  //         },
-  //       },
-  //     );
-  //   } catch (error) {
-  //     this.logger.error('Email preparation failed', error);
-  //     throw new InternalServerErrorException(
-  //       'Failed to prepare notification email.',
-  //     );
-  //   }
+    const comment = await this.collaborationClient.getComment({
+      roomId: data.roomId,
+      threadId: data.threadId,
+      commentId: data.commentId
+    });
 
-  //   if (!emailData) {
-  //     return { message: 'Mention is already read. No notification sent.' };
-  //   }
+    if (!comment?.body) {
+      return { message: 'Mention is already read or comment not found. No notification sent.' };
+    }
 
-  //   const { mention } = emailData;
-  //   const [author, doc] = await Promise.all([
-  //     this.userRepo.findById(mention.author.id),
-  //     this.docRepo.findByRoomId(mention.roomId),
-  //   ]);
+    const mentionContent = this.extractLexicalText(comment.body);
 
-  //   try {
-  //     await this.queueClient.sendMessage({
-  //       assigneeEmail: user.email,
-  //       content: mention.content,
-  //       mentionUrl: `https://www.devcollab.store/workspaces/${doc?.workspaceId}/docs?docId=${doc?.id}`,
-  //       label: doc?.label,
-  //       authorName: author?.name,
-  //     });
-  //   } catch (error) {
-  //     this.logger.warn(
-  //       `Queue message failed for mention: ${error?.message || error}`,
-  //     );
-  //   }
+    const [author, doc] = await Promise.all([
+      this.userRepo.findById(comment.userId),
+      this.docRepo.findByRoomId(data.roomId),
+    ]);
 
-  //   return { message: 'Text mention notification processed successfully.' };
-  // }
+    try {
+      await this.queueClient.sendMessage({
+        assigneeEmail: user.email,
+        content: mentionContent,
+        mentionUrl: `https://www.devcollab.store/workspaces/${doc?.workspaceId}/docs?docId=${doc?.id}`,
+        label: doc?.label,
+        authorName: author?.name,
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Queue message failed for mention: ${error?.message || error}`,
+      );
+    }
+
+    return { message: 'Text mention notification processed successfully.' };
+  }
 
   private async handleYdocUpdated(data: any) {
     try {
