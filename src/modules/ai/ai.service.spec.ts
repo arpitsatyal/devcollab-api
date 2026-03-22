@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AiService } from './services/ai.service';
-import { ChatEngineService } from './services/chatEngine.service';
-import { SuggestionService } from './services/suggestionService';
 import { MessageService } from '../message/message.service';
 import { WorkItemsService } from '../work-items/work-items.service';
+import { SuggestionService } from './services/suggestion.service';
+import { ChatEngineService } from './services/chat-engine.service';
 
 describe('AiService', () => {
   let service: AiService;

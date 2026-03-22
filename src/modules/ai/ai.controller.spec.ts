@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AiController } from './controllers/ai.controller';
 import { AiService } from './services/ai.service';
-import { ChatEngineService } from './services/chatEngine.service';
-import { SuggestionService } from './services/suggestionService';
 import { MessageService } from '../message/message.service';
 import { WorkItemsService } from '../work-items/work-items.service';
+import { ChatEngineService } from './services/chat-engine.service';
+import { SuggestionService } from './services/suggestion.service';
 
 describe('AiController', () => {
   let controller: AiController;
