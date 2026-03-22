@@ -12,9 +12,11 @@ import { User } from 'src/common/drizzle/schema';
 import { SessionAuthGuard } from 'src/common/guards/auth.guard';
 import { AuthenticatedRequest } from 'src/common/interfaces/AuthenticatedRequest';
 import { Response } from 'express';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('auth')
 export class AuthController {
+  constructor(private configService: ConfigService) {}
   @Get('google')
   @UseGuards(AuthGuard('google'))
   async googleLogin() {}
@@ -34,7 +36,7 @@ export class AuthController {
         if (err) {
           throw new UnauthorizedException('Failed to save session');
         }
-        res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
+        res.redirect(`${this.configService.get<string>('FRONTEND_URL')}/dashboard`);
       });
     });
   }
@@ -58,7 +60,7 @@ export class AuthController {
         if (err) {
           throw new UnauthorizedException('Failed to save session');
         }
-        res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
+        res.redirect(`${this.configService.get<string>('FRONTEND_URL')}/dashboard`);
       });
     });
   }
@@ -98,7 +100,7 @@ export class AuthController {
       res.clearCookie('connect.sid', {
         path: '/',
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: this.configService.get<string>('NODE_ENV') === 'production',
         sameSite: 'lax',
       });
 

@@ -7,19 +7,29 @@ import { DrizzleService } from 'src/common/drizzle/drizzle.service';
 import { workspaces, workItems, snippets, docs } from 'src/common/drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { VectorStorePort } from './ports/vector-store.port';
+import { ConfigService } from '@nestjs/config';
 
 export type SyncType = 'workspace' | 'workItem' | 'snippet' | 'doc';
 
 @Injectable()
 export class VectorStoreService implements VectorStorePort {
   private readonly logger = new Logger(VectorStoreService.name);
-  private readonly client = new Pinecone({
-    apiKey: process.env.PINECONE_API_KEY!,
-  });
-  private readonly indexName = process.env.PINECONE_INDEX!;
-  private readonly embeddings = new PineconeInferenceEmbeddings();
+  private readonly client: Pinecone;
+  private readonly indexName: string;
+  private readonly embeddings: PineconeInferenceEmbeddings;
 
-  constructor(private readonly drizzle: DrizzleService) { }
+  constructor(
+    private readonly drizzle: DrizzleService,
+    private readonly configService: ConfigService,
+  ) {
+    this.client = new Pinecone({
+      apiKey: this.configService.getOrThrow<string>('PINECONE_API_KEY'),
+    });
+    this.indexName = this.configService.getOrThrow<string>('PINECONE_INDEX');
+    this.embeddings = new PineconeInferenceEmbeddings({ 
+      apiKey: this.configService.getOrThrow<string>('PINECONE_API_KEY') 
+    });
+  }
 
   async search(
     query: string,

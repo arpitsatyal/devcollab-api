@@ -45,7 +45,6 @@
     "cookie-parser": "^1.4.7",
     "dayjs": "^1.11.13",
     "drizzle-orm": "^0.45.1",
-    "ejs": "^3.1.10",
     "express-session": "^1.18.1",
     "langchain": "^0.3.30",
     "passport": "^0.7.0",
@@ -55,7 +54,6 @@
     "postgres": "^3.4.8",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "session-file-store": "^1.5.0",
     "uuid": "^11.1.0",
     "zod": "^3.23.8"
   },

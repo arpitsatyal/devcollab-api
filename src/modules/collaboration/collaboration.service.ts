@@ -2,13 +2,18 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { Liveblocks } from '@liveblocks/node';
 import axios from 'axios';
 import { CollaborationPort } from './ports/collaboration.port';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CollaborationService implements CollaborationPort {
   private readonly logger = new Logger(CollaborationService.name);
-  private readonly liveblocks = new Liveblocks({
-    secret: process.env.LIVEBLOCKS_SECRET_KEY!,
-  });
+  private readonly liveblocks: Liveblocks;
+
+  constructor(private configService: ConfigService) {
+    this.liveblocks = new Liveblocks({
+      secret: this.configService.getOrThrow<string>('LIVEBLOCKS_SECRET_KEY'),
+    });
+  }
 
   async authorizeRoom(
     user: { id?: string; email?: string; name?: string; image?: string },
@@ -54,7 +59,7 @@ export class CollaborationService implements CollaborationPort {
         `https://api.liveblocks.io/v2/rooms/${roomId}/ydoc`,
         {
           headers: {
-            Authorization: `Bearer ${process.env.LIVEBLOCKS_SECRET_KEY}`,
+            Authorization: `Bearer ${this.configService.get<string>('LIVEBLOCKS_SECRET_KEY')}`,
             Accept: 'application/octet-stream',
           },
           responseType: 'arraybuffer',

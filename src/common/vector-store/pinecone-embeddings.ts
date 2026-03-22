@@ -13,7 +13,8 @@ export class PineconeInferenceEmbeddings extends Embeddings {
 
   constructor(params?: PineconeInferenceEmbeddingsParams) {
     super(params ?? {});
-    this.apiKey = params?.apiKey || process.env.PINECONE_API_KEY!;
+    this.apiKey = params?.apiKey || '';
+    if (!this.apiKey) throw new Error('Pinecone API key is required');
     this.model = params?.model || 'multilingual-e5-large';
     this.client = new Pinecone({ apiKey: this.apiKey });
   }
