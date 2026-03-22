@@ -41,7 +41,7 @@ async function bootstrap() {
         secure: process.env.NODE_ENV === 'production', // Must be true if frontend and backend are on different domains
         httpOnly: true,
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' required for cross-origin cookies
-        maxAge: 24 * 60 * 60 * 1000, 
+        maxAge: 24 * 60 * 60 * 1000,
       },
     }),
   );
