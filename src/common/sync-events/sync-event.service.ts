@@ -32,8 +32,8 @@ export class SyncEventService implements SyncEventPort {
   ) {
     const webhookUrl = `${this.appUrl}/api/webhooks/vector-sync`;
 
-    let messageId: string | undefined = undefined;
-
+    // 1. Pinecone — queued via QStash (awaited, reliable delivery with retries)
+    let messageId: string | undefined;
     try {
       const result = await this.client.publishJSON({
         queue: 'vector-sync-queue',
@@ -42,7 +42,6 @@ export class SyncEventService implements SyncEventPort {
         contentBasedDeduplication: true,
         retries: 3,
       });
-
       this.logger.log(`[QStash] Published messageId: ${result.messageId}`);
       messageId = result.messageId;
     } catch (err) {
@@ -51,33 +50,28 @@ export class SyncEventService implements SyncEventPort {
       );
     }
 
-    this.logger.log('syncing meilisearch.....')
-    if (action === 'upsert') {
-      try {
-        if (this.meiliUrl) {
-          // Replicate frontend payload format which attaches the workspace object
-          let syncDoc = { ...data };
-          if (data.workspaceId) {
-            const workspace = await this.drizzle.db.query.workspaces.findFirst({
-              where: eq(workspaces.id, data.workspaceId),
-            });
-            if (workspace) {
-              syncDoc.workspace = workspace;
-            }
-          }
-
-          await axios.post(
-            this.meiliUrl,
-            { doc: syncDoc, type },
-            { headers: { 'Content-Type': 'application/json' } },
-          );
-          this.logger.log(`[MeiliSearch] Synced ${type} ${data.id}`);
-        }
-      } catch (err) {
-        this.logger.warn(`[MeiliSearch] Failed to sync ${type}: ${data.id} -> ${err?.message || err}`);
-      }
+    // 2. MeiliSearch — fire-and-forget via private method
+    if (action === 'upsert' && this.meiliUrl) {
+      void this.syncMeiliSearch(type, data);
     }
 
     return messageId;
+  }
+
+  private async syncMeiliSearch(type: EventType, data: any) {
+    try {
+      let syncDoc = { ...data };
+      if (data.workspaceId) {
+        const workspace = await this.drizzle.db.query.workspaces.findFirst({
+          where: eq(workspaces.id, data.workspaceId),
+        });
+        if (workspace) syncDoc.workspace = workspace;
+      }
+
+      await axios.post(this.meiliUrl as string, { doc: syncDoc, type });
+      this.logger.log(`[MeiliSearch] Synced ${type} ${data.id}`);
+    } catch (err: any) {
+      this.logger.warn(`[MeiliSearch] Failed to sync ${type}: ${data.id} -> ${err?.message || err}`);
+    }
   }
 }
