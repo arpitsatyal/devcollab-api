@@ -1,78 +1,84 @@
-import { Injectable } from '@nestjs/common';
-import { eq, inArray } from 'drizzle-orm';
-import { PgTable } from 'drizzle-orm/pg-core';
+import { eq, inArray, InferInsertModel, InferSelectModel } from 'drizzle-orm';
+import { AnyPgColumn, AnyPgTable, PgTableWithColumns } from 'drizzle-orm/pg-core';
 import { DrizzleService } from './drizzle.service';
 import { v4 as uuid } from 'uuid';
 
 export abstract class BaseRepository<
-  TTable extends PgTable & { id: any },
-  TInsert extends Record<string, any> = any,
-  TUpdate extends Record<string, any> = Partial<TInsert>,
+  TTable extends PgTableWithColumns<any> & { id: AnyPgColumn },
+  TInsert extends InferInsertModel<TTable> = InferInsertModel<TTable>,
+  TUpdate extends Partial<InferInsertModel<TTable>> = Partial<InferInsertModel<TTable>>,
 > {
   constructor(
     protected readonly drizzle: DrizzleService,
     protected readonly table: TTable,
-  ) {}
+  ) { }
 
-  async findById(id: string): Promise<any> {
+  async findById(
+    id: InferSelectModel<TTable>['id'],
+  ): Promise<InferSelectModel<TTable> | undefined> {
     const [row] = await this.drizzle.db
       .select()
-      .from(this.table as any)
-      .where(eq((this.table as any).id, id));
+      .from(this.table as AnyPgTable)
+      .where(eq(this.table.id, id)) as unknown as InferSelectModel<TTable>[];
     return row;
   }
 
-  async findMany() {
-    return this.drizzle.db.select().from(this.table as any);
+  async findMany(): Promise<InferSelectModel<TTable>[]> {
+    return this.drizzle.db.select().from(this.table as AnyPgTable) as unknown as InferSelectModel<TTable>[];
   }
 
-  async findManyByIds(ids: string[]) {
+  async findManyByIds(
+    ids: InferSelectModel<TTable>['id'][],
+  ): Promise<InferSelectModel<TTable>[]> {
     if (!ids.length) return [];
     return this.drizzle.db
       .select()
-      .from(this.table as any)
-      .where(inArray((this.table as any).id, ids));
+      .from(this.table as AnyPgTable)
+      .where(inArray(this.table.id, ids)) as unknown as InferSelectModel<TTable>[];
   }
 
-  async create(data: TInsert) {
-    const insertData = { id: uuid(), ...data };
-    
+  async create(data: Omit<TInsert, 'id'>) {
+    const insertData: TInsert = { id: uuid(), ...(data as TInsert) };
+
     // Auto-inject createdAt and updatedAt if present
     if ('createdAt' in this.table) {
-      (insertData as any).createdAt = new Date();
+      (insertData as TInsert & { createdAt?: Date }).createdAt = new Date();
     }
     if ('updatedAt' in this.table) {
-      (insertData as any).updatedAt = new Date();
+      (insertData as TInsert & { updatedAt?: Date }).updatedAt = new Date();
     }
 
     const [row] = await this.drizzle.db
-      .insert(this.table as any)
-      .values(insertData as any)
-      .returning();
+      .insert(this.table as AnyPgTable)
+      .values(insertData)
+      .returning() as unknown as InferSelectModel<TTable>[];
     return row;
   }
 
-  async update(id: string, data: TUpdate) {
-    const updateData = { ...data };
-    
+  async update(
+    id: InferSelectModel<TTable>['id'],
+    data: TUpdate,
+  ) {
+    const updateData: TUpdate = { ...data };
+
     // Auto-inject updatedAt if present
     if ('updatedAt' in this.table) {
-      (updateData as any).updatedAt = new Date();
+      (updateData as TUpdate & { updatedAt?: Date }).updatedAt = new Date();
     }
 
     const [row] = await this.drizzle.db
-      .update(this.table as any)
-      .set(updateData as any)
-      .where(eq((this.table as any).id, id))
-      .returning();
+      .update(this.table as AnyPgTable)
+      .set(updateData)
+      .where(eq(this.table.id, id))
+      .returning() as unknown as InferSelectModel<TTable>[];
     return row;
   }
 
-  async delete(id: string) {
+  async delete(id: InferSelectModel<TTable>['id']) {
     const [row] = await this.drizzle.db
-      .delete(this.table as any)
-      .where(eq((this.table as any).id, id))
-      .returning();
+      .delete(this.table as AnyPgTable)
+      .where(eq(this.table.id, id))
+      .returning() as unknown as InferSelectModel<TTable>[];
     return row;
   }
 }

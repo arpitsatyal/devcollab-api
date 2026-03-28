@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   AIMessage,
   BaseMessage,
@@ -13,6 +13,8 @@ import { AgentPort } from '../ports/agent.port';
 
 @Injectable()
 export class LangGraphService implements AgentPort {
+  private readonly logger = new Logger(LangGraphService.name);
+
   constructor(
     private readonly llmGateway: LlmGateway,
     private readonly toolService: ToolRegistry,
@@ -65,9 +67,9 @@ export class LangGraphService implements AgentPort {
       .filter(Boolean) as string[];
 
     if (calledTools.length === 0) {
-      console.log('[LangGraph] Response: Direct LLM (no tools used)');
+      this.logger.log('Response: Direct LLM (no tools used)');
     } else {
-      console.log(`[LangGraph] Response: Tool Sequence [${calledTools.join(' -> ')}]`);
+      this.logger.log(`Response: Tool Sequence [${calledTools.join(' -> ')}]`);
     }
 
     const lastAIMessage = [...finalState.messages]

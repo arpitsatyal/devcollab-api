@@ -3,13 +3,9 @@ import { eq, count, inArray } from 'drizzle-orm';
 import { UserRepository } from './repositories/user.repository';
 import { DrizzleService } from 'src/common/drizzle/drizzle.service';
 import { workspaces, snippets, docs, users, workItems } from 'src/common/drizzle/schema';
+import { InferInsertModel } from 'drizzle-orm';
 
-interface CreateUserDTO {
-  email: string;
-  name: string;
-  provider: 'GOOGLE' | 'GITHUB' | 'LOCAL';
-  image?: string;
-}
+type CreateUserDTO = Omit<InferInsertModel<typeof users>, 'id' | 'createdAt' | 'emailVerified'>;
 
 @Injectable()
 export class UsersService {

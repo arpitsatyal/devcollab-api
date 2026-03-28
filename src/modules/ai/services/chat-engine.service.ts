@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { BaseMessage } from '@langchain/core/messages';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { AiConfig } from '../ai.config';
@@ -12,8 +12,12 @@ import { LlmGateway } from '../ports/llm.port';
 import { MessageService } from 'src/modules/message/message.service';
 import { AgentPort } from '../ports/agent.port';
 
+type IntentResult = z.infer<typeof IntentSchema>;
+
 @Injectable()
 export class ChatEngineService {
+  private readonly logger = new Logger(ChatEngineService.name);
+
   constructor(
     private readonly promptService: PromptPort,
     private readonly retrievalService: RetrievalPort,
@@ -48,10 +52,10 @@ export class ChatEngineService {
     );
 
     if (calledTools.length === 0) {
-      console.log('[Chat Engine] LangGraph: LLM answered directly (no tools).');
+      this.logger.log('LangGraph: LLM answered directly (no tools).');
     } else {
-      console.log(
-        `[Chat Engine] LangGraph tools used (${calledTools.length}): ${calledTools.join(' -> ')}`,
+      this.logger.log(
+        `LangGraph tools used (${calledTools.length}): ${calledTools.join(' -> ')}`,
       );
     }
 
@@ -84,7 +88,7 @@ export class ChatEngineService {
     }
 
     filteredResults.forEach(({ doc, score }: SearchHit, i: number) => {
-      console.log(
+      this.logger.debug(
         `Result ${i + 1}: Score: ${score.toFixed(4)}, Type: ${doc.metadata?.type}, Title: ${doc.metadata?.workspaceTitle}`,
       );
     });
@@ -121,7 +125,8 @@ export class ChatEngineService {
     question: string,
     filters?: Record<string, any>,
   ) {
-    type IntentResult = z.infer<typeof IntentSchema>;
+    const inWorkspace = Boolean(filters?.workspaceId);
+
     const classifierLlm = (await this.llmGateway.getReasoningStructuredLLM(
       IntentSchema,
       'classify_intent',
@@ -132,7 +137,7 @@ export class ChatEngineService {
       this.promptService.buildIntentClassificationPrompt(question);
 
     let intent = 'WORKSPACE_QUERY';
-    let scope: 'APP_SPECIFIC' | 'OUT_OF_SCOPE' = filters?.workspaceId
+    let scope: 'APP_SPECIFIC' | 'OUT_OF_SCOPE' = inWorkspace
       ? 'APP_SPECIFIC'
       : 'OUT_OF_SCOPE';
 
@@ -142,27 +147,35 @@ export class ChatEngineService {
         intent = result.intent;
         scope = result.scope;
       } else {
-        console.warn(
-          '[Intent Classification] Low confidence, defaulting to WORKSPACE_QUERY',
+        this.logger.warn(
+          'Intent Classification: Low confidence, defaulting to WORKSPACE_QUERY',
         );
       }
     } catch (e) {
-      console.warn(
-        '[Intent Classification] Failed, defaulting to WORKSPACE_QUERY:',
-        e,
+      this.logger.warn(
+        `Intent Classification failed, defaulting to WORKSPACE_QUERY: ${e instanceof Error ? e.message : e
+        }`,
       );
     }
 
+    // When user is inside a workspace, never send the generic app-scope reply.
+    if (inWorkspace && scope === 'OUT_OF_SCOPE') {
+      this.logger.log(
+        'Suppressing appScopeReply because workspace context is present; treating as APP_SPECIFIC.',
+      );
+      scope = 'APP_SPECIFIC';
+    }
+
     if (intent === 'CONVERSATIONAL') {
-      if (scope === 'OUT_OF_SCOPE') {
+      if (!inWorkspace && scope === 'OUT_OF_SCOPE') {
         return {
           answer: this.config.appScopeReply,
           context: '',
           validated: { isValid: true, warning: null },
         };
       }
-      console.log(
-        '[Chat Engine] Intent classified as CONVERSATIONAL. Skipping tools/search.',
+      this.logger.log(
+        'Intent classified as CONVERSATIONAL. Skipping tools/search.',
       );
       const history = await this.getFormattedHistory(chatId, 10);
       const conversationalMessages =
@@ -178,7 +191,7 @@ export class ChatEngineService {
       };
     }
 
-    if (scope === 'OUT_OF_SCOPE' && !filters?.workspaceId) {
+    if (scope === 'OUT_OF_SCOPE' && !inWorkspace) {
       return {
         answer: this.config.appScopeReply,
         context: '',
@@ -186,8 +199,8 @@ export class ChatEngineService {
       };
     }
 
-    if (filters?.workspaceId) {
-      const workspaceId = String(filters.workspaceId);
+    if (inWorkspace) {
+      const workspaceId = String(filters!.workspaceId);
       return this.getAIResponseWithTools(chatId, question, workspaceId);
     }
     return this.getAIResponseWithSearch(chatId, question, filters);

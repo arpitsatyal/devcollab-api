@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { Document } from '@langchain/core/documents';
@@ -11,6 +11,7 @@ import { eq, or, ilike, and } from 'drizzle-orm';
 @Injectable()
 export class RetrievalService implements RetrievalPort {
   private readonly scoreThreshold = 0.5;
+  private readonly logger = new Logger(RetrievalService.name);
 
   constructor(
     private readonly drizzle: DrizzleService,
@@ -36,7 +37,9 @@ export class RetrievalService implements RetrievalPort {
         .slice(0, 3);
       return [query, ...variations];
     } catch (e) {
-      console.warn('[Query Expansion] Failed:', e);
+      this.logger.warn(
+        `Query expansion failed: ${e instanceof Error ? e.message : e}`,
+      );
       return [query];
     }
   }
