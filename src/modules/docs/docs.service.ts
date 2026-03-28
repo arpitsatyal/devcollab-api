@@ -18,7 +18,7 @@ export class DocsService {
   }
 
   async getDocs(workspaceId: string) {
-    return this.docRepo.findMany(workspaceId);
+    return this.docRepo.findByWorkspaceId(workspaceId);
   }
 
   async createDoc(workspaceId: string, dto: DocCreateDto) {

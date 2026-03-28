@@ -12,7 +12,7 @@ export class SnippetsController {
 
   @Get()
   async getSnippets(@Param('workspaceId') workspaceId: string) {
-    return this.snippetsService.getSnippets(workspaceId);
+    return this.snippetsService.getSnippetsByWorkspace(workspaceId);
   }
 
   @Get(':snippetId')

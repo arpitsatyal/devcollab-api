@@ -2,11 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { eq, asc } from 'drizzle-orm';
 import { DrizzleService } from 'src/common/drizzle/drizzle.service';
 import { messages } from 'src/common/drizzle/schema';
-import { v4 as uuid } from 'uuid';
+import { BaseRepository } from 'src/common/drizzle/base.repository';
 
 @Injectable()
-export class MessageRepository {
-  constructor(private readonly drizzle: DrizzleService) {}
+export class MessageRepository extends BaseRepository<typeof messages> {
+  constructor(drizzle: DrizzleService) {
+    super(drizzle, messages);
+  }
 
   findUnique(id: string) {
     return this.drizzle.db.query.messages.findFirst({
@@ -14,7 +16,7 @@ export class MessageRepository {
     });
   }
 
-  findMany(chatId: string, limit?: number) {
+  findByChatId(chatId: string, limit?: number) {
     const query = this.drizzle.db
       .select()
       .from(messages)
@@ -26,31 +28,5 @@ export class MessageRepository {
     }
 
     return query;
-  }
-
-  async create(args: { data: { chatId: string; content: string; isUser: boolean } }) {
-    const { chatId, content, isUser } = args.data;
-    const [row] = await this.drizzle.db
-      .insert(messages)
-      .values({ id: uuid(), chatId, content, isUser })
-      .returning();
-    return row;
-  }
-
-  async update(args: { where: { id: string }; data: Partial<{ content: string; isUser: boolean }> }) {
-    const [row] = await this.drizzle.db
-      .update(messages)
-      .set(args.data)
-      .where(eq(messages.id, args.where.id))
-      .returning();
-    return row;
-  }
-
-  async delete(args: { where: { id: string } }) {
-    const [row] = await this.drizzle.db
-      .delete(messages)
-      .where(eq(messages.id, args.where.id))
-      .returning();
-    return row;
   }
 }

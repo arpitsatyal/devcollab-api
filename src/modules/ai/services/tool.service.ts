@@ -98,7 +98,7 @@ export class ToolService implements ToolRegistry {
 
     const snippets = title
       ? await this.snippetRepo.findManyBySearch(workspaceId, title, 20)
-      : await this.snippetRepo.findMany(workspaceId, 100);
+      : await this.snippetRepo.findByWorkspaceId(workspaceId, 100);
 
     if (snippets.length === 0) {
       return title
@@ -124,7 +124,7 @@ export class ToolService implements ToolRegistry {
 
     const docs = label
       ? await this.docRepo.findManyByLabel(workspaceId, label, 20)
-      : await this.docRepo.findMany(workspaceId, 100);
+      : await this.docRepo.findByWorkspaceId(workspaceId, 100);
 
     if (docs.length === 0) {
       return label
@@ -149,7 +149,7 @@ export class ToolService implements ToolRegistry {
 
     const workItems = title
       ? await this.workItemRepo.findManyBySearch(workspaceId, title, 20)
-      : await this.workItemRepo.findMany(workspaceId, 100);
+      : await this.workItemRepo.findByWorkspaceId(workspaceId, 100);
 
     if (workItems.length === 0) {
       return title

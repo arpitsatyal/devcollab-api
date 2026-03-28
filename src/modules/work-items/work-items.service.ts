@@ -30,7 +30,7 @@ export class WorkItemsService {
       throw new BadRequestException('Workspace ID is required');
     }
 
-    return this.workItemRepo.findMany(workspaceId);
+    return this.workItemRepo.findByWorkspaceId(workspaceId);
   }
 
   async getWorkItem(workItemId: string) {

@@ -2,15 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { eq, and, gte, lte, ilike, or } from 'drizzle-orm';
 import { DrizzleService } from 'src/common/drizzle/drizzle.service';
 import { workItems, workItemsToSnippets } from 'src/common/drizzle/schema';
+import { BaseRepository } from 'src/common/drizzle/base.repository';
 import { v4 as uuid } from 'uuid';
 
 export type WorkItemStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
 
 @Injectable()
-export class WorkItemRepository {
-  constructor(private readonly drizzle: DrizzleService) {}
+export class WorkItemRepository extends BaseRepository<typeof workItems> {
+  constructor(drizzle: DrizzleService) {
+    super(drizzle, workItems);
+  }
 
-  async findMany(workspaceId: string, limit?: number) {
+  async findByWorkspaceId(workspaceId: string, limit?: number) {
     const query = this.drizzle.db.query.workItems.findMany({
       where: eq(workItems.workspaceId, workspaceId),
       with: {

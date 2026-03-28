@@ -6,14 +6,14 @@ export class MessageService {
   constructor(private readonly repo: MessageRepository) {}
 
   async saveUserMessage(chatId: string, content: string) {
-    return this.repo.create({ data: { chatId, content, isUser: true } });
+    return this.repo.create({ chatId, content, isUser: true });
   }
 
   async saveAiMessage(chatId: string, content: string) {
-    return this.repo.create({ data: { chatId, content, isUser: false } });
+    return this.repo.create({ chatId, content, isUser: false });
   }
 
   async getHistory(chatId: string, limit: number) {
-    return this.repo.findMany(chatId, limit);
+    return this.repo.findByChatId(chatId, limit);
   }
 }

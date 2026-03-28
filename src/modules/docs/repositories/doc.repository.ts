@@ -2,11 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { eq, ilike, and } from 'drizzle-orm';
 import { DrizzleService } from 'src/common/drizzle/drizzle.service';
 import { docs } from 'src/common/drizzle/schema';
-import { v4 as uuid } from 'uuid';
+import { BaseRepository } from 'src/common/drizzle/base.repository';
 
 @Injectable()
-export class DocRepository {
-  constructor(private readonly drizzle: DrizzleService) {}
+export class DocRepository extends BaseRepository<typeof docs> {
+  constructor(drizzle: DrizzleService) {
+    super(drizzle, docs);
+  }
 
   findUnique(id: string) {
     return this.drizzle.db.query.docs.findFirst({
@@ -20,7 +22,7 @@ export class DocRepository {
     });
   }
 
-  findMany(workspaceId: string, limit?: number) {
+  findByWorkspaceId(workspaceId: string, limit?: number) {
     const query = this.drizzle.db
       .select()
       .from(docs)
@@ -37,36 +39,15 @@ export class DocRepository {
       .limit(limit);
   }
 
-  async create(data: { label: string; workspaceId: string; roomId: string }) {
-    const [row] = await this.drizzle.db
-      .insert(docs)
-      .values({ id: uuid(), ...data })
-      .returning();
-    return row;
-  }
-
-  async update(id: string, data: Partial<{ content: unknown; updatedAt: Date }>) {
-    const [row] = await this.drizzle.db
-      .update(docs)
-      .set(data)
-      .where(eq(docs.id, id))
-      .returning();
-    return row;
-  }
-
   async updateByRoomId(roomId: string, data: Partial<{ content: unknown; updatedAt: Date }>) {
+    const updateData = { ...data };
+    if ('updatedAt' in this.table) {
+      (updateData as any).updatedAt = new Date();
+    }
     const [row] = await this.drizzle.db
       .update(docs)
-      .set(data)
+      .set(updateData as any)
       .where(eq(docs.roomId, roomId))
-      .returning();
-    return row;
-  }
-
-  async delete(id: string) {
-    const [row] = await this.drizzle.db
-      .delete(docs)
-      .where(eq(docs.id, id))
       .returning();
     return row;
   }

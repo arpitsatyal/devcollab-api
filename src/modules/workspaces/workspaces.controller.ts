@@ -6,6 +6,7 @@ import {
   Patch,
   Post,
   Query,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { WorkspacesService } from './workspaces.service';
@@ -25,9 +26,8 @@ export class WorkspacesController {
     const skip = parseInt(query.skip ?? '10');
     const take = parseInt(query.limit ?? '10');
 
-    //TODO: Remove this
     if (!user) {
-      return this.workspacesService.getWorkspacesV1({ skip, take });
+      throw new UnauthorizedException();
     }
 
     return this.workspacesService.getWorkspaces({ user, skip, take });

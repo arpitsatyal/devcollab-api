@@ -20,7 +20,7 @@ export class ChatService {
   }
 
   async createChat(senderId: string) {
-    return this.chatRepo.create(senderId);
+    return this.chatRepo.create({ senderId });
   }
 
   async deleteChat(chatId: string) {

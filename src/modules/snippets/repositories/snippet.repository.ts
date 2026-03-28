@@ -2,11 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { eq, ilike, or, and } from 'drizzle-orm';
 import { DrizzleService } from 'src/common/drizzle/drizzle.service';
 import { snippets } from 'src/common/drizzle/schema';
-import { v4 as uuid } from 'uuid';
+import { BaseRepository } from 'src/common/drizzle/base.repository';
 
 @Injectable()
-export class SnippetRepository {
-  constructor(private readonly drizzle: DrizzleService) {}
+export class SnippetRepository extends BaseRepository<typeof snippets> {
+  constructor(drizzle: DrizzleService) {
+    super(drizzle, snippets);
+  }
 
   findUnique(id: string) {
     return this.drizzle.db.query.snippets.findFirst({
@@ -14,7 +16,7 @@ export class SnippetRepository {
     });
   }
 
-  findMany(workspaceId: string, limit?: number) {
+  findByWorkspaceId(workspaceId: string, limit?: number) {
     const query = this.drizzle.db
       .select()
       .from(snippets)
@@ -37,47 +39,5 @@ export class SnippetRepository {
         ),
       )
       .limit(limit);
-  }
-
-  async create(data: {
-    title: string;
-    language: string;
-    content: string;
-    extension?: string;
-    workspaceId: string;
-    authorId?: string;
-  }) {
-    const [row] = await this.drizzle.db
-      .insert(snippets)
-      .values({ id: uuid(), ...data })
-      .returning();
-    return row;
-  }
-
-  async update(
-    id: string,
-    data: Partial<{
-      title: string;
-      language: string;
-      content: string;
-      extension: string;
-      lastEditedById: string;
-      updatedAt: Date;
-    }>,
-  ) {
-    const [row] = await this.drizzle.db
-      .update(snippets)
-      .set(data)
-      .where(eq(snippets.id, id))
-      .returning();
-    return row;
-  }
-
-  async delete(id: string) {
-    const [row] = await this.drizzle.db
-      .delete(snippets)
-      .where(eq(snippets.id, id))
-      .returning();
-    return row;
   }
 }

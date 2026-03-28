@@ -17,8 +17,8 @@ export class SnippetsService {
     return snippet;
   }
 
-  async getSnippets(workspaceId: string) {
-    return this.snippetRepo.findMany(workspaceId);
+  async getSnippetsByWorkspace(workspaceId: string) {
+    return this.snippetRepo.findByWorkspaceId(workspaceId);
   }
 
   async createSnippet(

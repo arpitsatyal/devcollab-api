@@ -28,18 +28,14 @@ export class WorkspacesService {
     return workspace;
   }
 
-  async getWorkspacesV1(params: {
-    skip?: number;
-    take?: number;
-  }) {
-    const { skip, take } = params;
-    return this.workspaceRepo.findMany(skip, take);
+  async getAllWorkspaces(skip = 0, take = 20) {
+    return this.workspaceRepo.findPaginated(skip, take);
   }
 
   async getWorkspaces(params: {
-    user: { id: string };
     skip?: number;
     take?: number;
+    user: { id: string };
   }) {
     const { skip, take, user } = params;
     return this.workspaceRepo.findManyRaw(user.id, skip, take);

@@ -2,19 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { eq, and, sql } from 'drizzle-orm';
 import { DrizzleService } from 'src/common/drizzle/drizzle.service';
 import { workspaces, userPinnedWorkspaces } from 'src/common/drizzle/schema';
+import { BaseRepository } from 'src/common/drizzle/base.repository';
 import { v4 as uuid } from 'uuid';
 
 @Injectable()
-export class WorkspaceRepository {
-  constructor(private readonly drizzle: DrizzleService) { }
-
-  findById(id: string) {
-    return this.drizzle.db.query.workspaces.findFirst({
-      where: eq(workspaces.id, id),
-    });
+export class WorkspaceRepository extends BaseRepository<typeof workspaces> {
+  constructor(drizzle: DrizzleService) {
+    super(drizzle, workspaces);
   }
 
-  findMany(skip = 0, take = 20) {
+  findPaginated(skip = 0, take = 20) {
     return this.drizzle.db.query.workspaces.findMany({
       offset: skip,
       limit: take,
@@ -35,15 +32,6 @@ export class WorkspaceRepository {
         LIMIT ${take}
       `,
     );
-  }
-
-  async create(data: { title: string; description?: string | null; ownerId: string }) {
-    const now = new Date();
-    const [row] = await this.drizzle.db
-      .insert(workspaces)
-      .values({ id: uuid(), ...data, createdAt: now, updatedAt: now })
-      .returning();
-    return row;
   }
 
   async upsertPin(userId: string, workspaceId: string) {
@@ -70,22 +58,5 @@ export class WorkspaceRepository {
           eq(userPinnedWorkspaces.workspaceId, workspaceId),
         ),
       );
-  }
-
-  async update(id: string, data: Partial<{ title: string; description: string; isPublic: boolean }>) {
-    const [row] = await this.drizzle.db
-      .update(workspaces)
-      .set({ ...data, updatedAt: new Date() })
-      .where(eq(workspaces.id, id))
-      .returning();
-    return row;
-  }
-
-  async delete(id: string) {
-    const [row] = await this.drizzle.db
-      .delete(workspaces)
-      .where(eq(workspaces.id, id))
-      .returning();
-    return row;
   }
 }
