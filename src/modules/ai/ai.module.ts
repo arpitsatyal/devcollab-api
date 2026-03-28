@@ -5,6 +5,7 @@ import { ChatEngineService } from './services/chat-engine.service';
 import { SuggestionService } from './services/suggestion.service';
 import { MessageModule } from '../message/message.module';
 import { WorkItemsModule } from '../work-items/work-items.module';
+import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { SnippetRepository } from '../snippets/repositories/snippet.repository';
 import { DocRepository } from '../docs/repositories/doc.repository';
 import { WorkItemRepository } from '../work-items/repositories/work-item.repository';
@@ -23,7 +24,7 @@ import { RetrievalService } from './services/retrieval.service';
 import { ToolService } from './services/tool.service';
 
 @Module({
-  imports: [MessageModule, WorkItemsModule, LlmModule, VectorStoreModule],
+  imports: [MessageModule, WorkItemsModule, LlmModule, VectorStoreModule, WorkspacesModule],
   providers: [
     AiConfig,
     AiService,

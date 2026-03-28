@@ -30,7 +30,7 @@ export class LangGraphService implements AgentPort {
     messages: BaseMessage[],
     workspaceId: string,
   ): Promise<{ answer: string; calledTools: string[] }> {
-    const { list: tools } = this.toolService.getTools();
+    const { list: tools } = this.toolService.getToolsForWorkspace(workspaceId);
     const llmWithTools = await this.llmGateway.getReasoningToolBoundLLM(tools);
 
     const callModel = async (

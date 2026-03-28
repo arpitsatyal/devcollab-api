@@ -1,8 +1,5 @@
-import { StructuredTool } from '@langchain/core/tools';
+import { DynamicStructuredTool } from '@langchain/core/tools';
 
 export abstract class ToolRegistry {
-  abstract getTools(): {
-    list: StructuredTool[];
-    byName: Record<string, StructuredTool>;
-  };
+  abstract getToolsForWorkspace(workspaceId: string): { list: DynamicStructuredTool[] };
 }

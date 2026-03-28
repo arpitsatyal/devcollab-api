@@ -2,17 +2,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { BaseMessage } from '@langchain/core/messages';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { AiConfig } from '../ai.config';
-import { RunnableLike } from '@langchain/core/runnables';
-import { z } from 'zod';
-import { IntentSchema } from './prompt.service';
 import { PromptPort } from '../ports/prompt.port';
 import { RetrievalPort, SearchHit } from '../ports/retrieval.port';
 import { GenerationPort } from '../ports/generation.port';
 import { LlmGateway } from '../ports/llm.port';
 import { MessageService } from 'src/modules/message/message.service';
 import { AgentPort } from '../ports/agent.port';
-
-type IntentResult = z.infer<typeof IntentSchema>;
+import { IntentClassifierLlm } from '../types';
+import { IntentSchema } from '../schemas';
 
 @Injectable()
 export class ChatEngineService {
@@ -44,6 +41,7 @@ export class ChatEngineService {
     const messages: BaseMessage[] = this.promptService.buildChatMessages(
       history,
       question,
+      workspaceId,
     );
 
     const { answer, calledTools } = await this.langGraphService.runAgentGraph(
@@ -127,14 +125,13 @@ export class ChatEngineService {
   ) {
     const inWorkspace = Boolean(filters?.workspaceId);
 
-    const classifierLlm = (await this.llmGateway.getReasoningStructuredLLM(
+    const classifierLlm = await this.llmGateway.getReasoningStructuredLLM(
       IntentSchema,
       'classify_intent',
-    )) as RunnableLike<BaseMessage[], IntentResult> & {
-      invoke: (input: BaseMessage[]) => Promise<IntentResult>;
-    };
+    ) as IntentClassifierLlm;
+
     const intentMessages =
-      this.promptService.buildIntentClassificationPrompt(question);
+      this.promptService.buildIntentClassificationPrompt(question, inWorkspace);
 
     let intent = 'WORKSPACE_QUERY';
     let scope: 'APP_SPECIFIC' | 'OUT_OF_SCOPE' = inWorkspace
@@ -158,14 +155,6 @@ export class ChatEngineService {
       );
     }
 
-    // When user is inside a workspace, never send the generic app-scope reply.
-    if (inWorkspace && scope === 'OUT_OF_SCOPE') {
-      this.logger.log(
-        'Suppressing appScopeReply because workspace context is present; treating as APP_SPECIFIC.',
-      );
-      scope = 'APP_SPECIFIC';
-    }
-
     if (intent === 'CONVERSATIONAL') {
       if (!inWorkspace && scope === 'OUT_OF_SCOPE') {
         return {
@@ -177,13 +166,16 @@ export class ChatEngineService {
       this.logger.log(
         'Intent classified as CONVERSATIONAL. Skipping tools/search.',
       );
+
       const history = await this.getFormattedHistory(chatId, 10);
       const conversationalMessages =
-        this.promptService.buildConversationalMessages(history, question);
+        this.promptService.buildConversationalMessages(history, question, scope === 'OUT_OF_SCOPE');
       const conversationalLlm = await this.llmGateway.getSpeedyLLM();
+
       const answer = await conversationalLlm
         .pipe(new StringOutputParser())
         .invoke(conversationalMessages);
+
       return {
         answer,
         context: '',
